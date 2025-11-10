@@ -15,6 +15,7 @@ export function getAuthorized() {
       isShowAuthorized = false;
       if (res.confirm) {
         // 跳转登录页
+        Taro.navigateTo({ url: "/pages/login/index" });
       }
     },
   });

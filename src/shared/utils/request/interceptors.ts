@@ -7,10 +7,10 @@ export default function (chain) {
   const requestParams = chain.requestParams;
   const { url } = requestParams;
   const isNeedSetToken = !(url && url.includes("login"));
-  if (isNeedSetToken) {
+  if (isNeedSetToken && GlobalStore.token) {
     requestParams.header = {
       ...requestParams.header,
-      Authorization: GlobalStore.token || "",
+      Authorization: `Bearer ${GlobalStore.token}`,
     };
   }
 

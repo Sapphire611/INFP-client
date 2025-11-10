@@ -1,0 +1,223 @@
+.profile-edit-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+
+  .page-content {
+    padding: 40px 30px;
+
+    // 头像设置区域
+    .avatar-section {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+      .section-label {
+        display: block;
+        font-size: 28px;
+        font-weight: 600;
+        color: #333333;
+        margin-bottom: 30px;
+      }
+
+      .avatar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding: 20px 0;
+
+        .avatar-image,
+        .avatar-placeholder {
+          width: 160px;
+          height: 160px;
+          border-radius: 80px;
+          overflow: hidden;
+        }
+
+        .avatar-image {
+          display: block;
+        }
+
+        .avatar-placeholder {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          .avatar-placeholder-text {
+            font-size: 60px;
+            color: #ffffff;
+            font-weight: bold;
+          }
+        }
+
+        .avatar-edit-hint {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 20px;
+          background: #f5f6f8;
+          border-radius: 20px;
+
+          .camera-icon {
+            font-size: 24px;
+          }
+
+          .hint-text {
+            font-size: 24px;
+            color: #666666;
+          }
+        }
+      }
+    }
+
+    // 表单区域
+    .form-section {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+      .form-item {
+        margin-bottom: 30px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .form-label-row {
+          display: flex;
+          align-items: center;
+          margin-bottom: 16px;
+
+          .form-label {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333333;
+          }
+
+          .required-mark {
+            font-size: 28px;
+            color: #ff4d4f;
+            margin-left: 6px;
+          }
+        }
+
+        .form-label {
+          display: block;
+          font-size: 28px;
+          font-weight: 600;
+          color: #333333;
+          margin-bottom: 16px;
+        }
+
+        .form-input {
+          width: 100%;
+          height: 88px;
+          background: #f5f6f8;
+          border-radius: 12px;
+          padding: 0 20px;
+          font-size: 28px;
+          color: #333333;
+          box-sizing: border-box;
+
+          &::placeholder {
+            color: #999999;
+          }
+        }
+
+        .phone-input-container {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+
+          .phone-input {
+            flex: 1;
+          }
+
+          .get-phone-btn {
+            flex-shrink: 0;
+            height: 88px;
+            padding: 0 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            font-size: 24px;
+            border-radius: 12px;
+            border: none;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &::after {
+              border: none;
+            }
+
+            &:active {
+              opacity: 0.8;
+            }
+          }
+        }
+      }
+
+      .form-tips {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 20px;
+        background: #f0f7ff;
+        border-radius: 12px;
+        margin-top: 30px;
+
+        .tips-icon {
+          font-size: 28px;
+          line-height: 1.5;
+        }
+
+        .tips-text {
+          flex: 1;
+          font-size: 24px;
+          color: #666666;
+          line-height: 1.6;
+        }
+      }
+    }
+
+    // 保存按钮区域
+    .button-section {
+      padding: 20px 0;
+
+      .save-button {
+        width: 100%;
+        height: 96px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 48px;
+        border: none;
+        font-size: 32px;
+        font-weight: bold;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+
+        &::after {
+          border: none;
+        }
+
+        &:active {
+          transform: scale(0.98);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        &.button-loading {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+}

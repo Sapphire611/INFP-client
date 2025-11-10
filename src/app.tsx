@@ -2,10 +2,14 @@ import { useEffect } from "react";
 import { Provider } from "mobx-react";
 import Taro from "@tarojs/taro";
 import store from "@shared/store";
+import { AuthStore } from "@shared/store";
 import "./app.scss";
 
 const App = (props) => {
   useEffect(() => {
+    // 初始化认证状态
+    AuthStore.loadLocalData();
+
     if (process.env.TARO_ENV === "weapp") {
       // 检测新版本
       if (Taro.getUpdateManager) {

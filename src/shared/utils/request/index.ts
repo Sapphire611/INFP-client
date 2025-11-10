@@ -22,7 +22,7 @@ class httpRequest {
       const uploadOptions = {
         ...options,
         header: {
-          Authorization: GlobalStore.token || "",
+          Authorization: GlobalStore.token ? `Bearer ${GlobalStore.token}` : "",
           "Content-Type": "multipart/form-data",
         },
       };

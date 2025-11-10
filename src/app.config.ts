@@ -6,6 +6,8 @@ export default {
     "pages/stars/index",
     "pages/profile/index",
     "pages/index/index",
+    "pages/login/index",
+    "pages/profile-edit/index",
   ],
   window: {
     backgroundTextStyle: "light",
