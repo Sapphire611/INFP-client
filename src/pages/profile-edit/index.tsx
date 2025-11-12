@@ -16,91 +16,19 @@ const ProfileEdit = observer(() => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * 选择头像
+   * 选择头像 - 使用微信新的头像授权方式
+   * 从 2023 年开始，getUserProfile 已废弃
+   * 需要使用 button open-type="chooseAvatar"
    */
-  const handleChooseAvatar = () => {
-    Taro.showActionSheet({
-      itemList: ["从相册选择", "使用微信头像"],
-      success: async (res) => {
-        if (res.tapIndex === 0) {
-          // 从相册选择
-          try {
-            const result = await Taro.chooseImage({
-              count: 1,
-              sizeType: ["compressed"],
-              sourceType: ["album", "camera"],
-            });
-
-            if (result.tempFilePaths && result.tempFilePaths.length > 0) {
-              const tempPath = result.tempFilePaths[0];
-              // TODO: 上传图片到服务器
-              // 现在先使用临时路径
-              setAvatar(tempPath);
-              Taro.showToast({
-                title: "头像已选择",
-                icon: "success",
-              });
-            }
-          } catch (error) {
-            console.error("选择图片失败:", error);
-          }
-        } else if (res.tapIndex === 1) {
-          // 获取微信用户信息
-          try {
-            const profile = await Taro.getUserProfile({
-              desc: "用于完善个人资料",
-            });
-
-            if (profile.userInfo) {
-              setAvatar(profile.userInfo.avatarUrl);
-              // 如果昵称为空，也可以同步微信昵称
-              if (!name) {
-                setName(profile.userInfo.nickName);
-              }
-              Taro.showToast({
-                title: "已获取微信头像",
-                icon: "success",
-              });
-            }
-          } catch (error) {
-            console.error("获取微信用户信息失败:", error);
-            Taro.showToast({
-              title: "获取失败，请重试",
-              icon: "none",
-            });
-          }
-        }
-      },
-    });
-  };
-
-  /**
-   * 获取微信绑定的手机号
-   */
-  const handleGetPhoneNumber = async (e) => {
-    if (e.detail.errMsg === "getPhoneNumber:ok") {
-      try {
-        // 获取到的 code 需要发送到后端解密
-        const { code } = e.detail;
-
-        // TODO: 调用后端接口解密手机号
-        // 暂时提示用户手动输入
-        Taro.showModal({
-          title: "提示",
-          content: "微信手机号授权成功，请手动输入手机号",
-          showCancel: false,
-        });
-      } catch (error) {
-        console.error("获取手机号失败:", error);
-        Taro.showToast({
-          title: "获取失败，请手动输入",
-          icon: "none",
-        });
-      }
-    } else {
+  const handleChooseAvatar = (e: any) => {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      // TODO: 上传图片到服务器
+      // 现在先使用临时路径
+      setAvatar(avatarUrl);
       Taro.showToast({
-        title: "已取消授权",
-        icon: "none",
+        title: "头像已选择",
+        icon: "success",
       });
     }
   };
@@ -186,21 +114,27 @@ const ProfileEdit = observer(() => {
         {/* 头像设置 */}
         <View className="avatar-section">
           <Text className="section-label">头像</Text>
-          <View className="avatar-container" onClick={handleChooseAvatar}>
-            {avatar ? (
-              <Image className="avatar-image" src={avatar} mode="aspectFill" />
-            ) : (
-              <View className="avatar-placeholder">
-                <Text className="avatar-placeholder-text">
-                  {name?.charAt(0) || "头"}
-                </Text>
+          <Button
+            className="avatar-button"
+            openType="chooseAvatar"
+            onChooseAvatar={handleChooseAvatar}
+          >
+            <View className="avatar-container">
+              {avatar ? (
+                <Image className="avatar-image" src={avatar} mode="aspectFill" />
+              ) : (
+                <View className="avatar-placeholder">
+                  <Text className="avatar-placeholder-text">
+                    {name?.charAt(0) || "头"}
+                  </Text>
+                </View>
+              )}
+              <View className="avatar-edit-hint">
+                <Text className="camera-icon">📷</Text>
+                <Text className="hint-text">点击修改</Text>
               </View>
-            )}
-            <View className="avatar-edit-hint">
-              <Text className="camera-icon">📷</Text>
-              <Text className="hint-text">点击修改</Text>
             </View>
-          </View>
+          </Button>
         </View>
 
         {/* 表单区域 */}
@@ -213,12 +147,13 @@ const ProfileEdit = observer(() => {
             </View>
             <Input
               className="form-input"
-              type="text"
-              placeholder="请输入您的姓名"
+              type="nickname"
+              placeholder="请输入您的姓名（点击可使用微信昵称）"
               value={name}
               onInput={(e) => setName(e.detail.value)}
               maxlength={20}
             />
+            <Text className="input-hint">💡 输入框会提示使用微信昵称</Text>
           </View>
 
           {/* 手机号 */}
@@ -227,23 +162,14 @@ const ProfileEdit = observer(() => {
               <Text className="form-label">手机号</Text>
               <Text className="required-mark">*</Text>
             </View>
-            <View className="phone-input-container">
-              <Input
-                className="form-input phone-input"
-                type="number"
-                placeholder="请输入手机号"
-                value={phone}
-                onInput={(e) => setPhone(e.detail.value)}
-                maxlength={11}
-              />
-              <Button
-                className="get-phone-btn"
-                openType="getPhoneNumber"
-                onGetPhoneNumber={handleGetPhoneNumber}
-              >
-                从微信获取
-              </Button>
-            </View>
+            <Input
+              className="form-input"
+              type="number"
+              placeholder="请输入手机号"
+              value={phone}
+              onInput={(e) => setPhone(e.detail.value)}
+              maxlength={11}
+            />
           </View>
 
           {/* 提示信息 */}

@@ -3,6 +3,7 @@ export default {
     "pages/home/index",
     "pages/tasks/index",
     "pages/courses/index",
+    "pages/courses/detail/index",
     "pages/stars/index",
     "pages/profile/index",
     "pages/index/index",

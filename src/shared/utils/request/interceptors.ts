@@ -40,7 +40,7 @@ export function checkResponse(response: IApiData) {
       title: msg || "网络异常",
       icon: "none",
     });
-    Promise.reject({ code, msg });
+    return Promise.reject({ code, msg });
   }
   return Promise.resolve(response);
 }

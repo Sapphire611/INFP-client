@@ -21,6 +21,20 @@
         margin-bottom: 30px;
       }
 
+      // 重置 Button 默认样式，用于头像选择
+      .avatar-button {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        border: none;
+        line-height: 1;
+
+        &::after {
+          border: none;
+        }
+      }
+
       .avatar-container {
         display: flex;
         flex-direction: column;
@@ -127,6 +141,14 @@
           &::placeholder {
             color: #999999;
           }
+        }
+
+        .input-hint {
+          display: block;
+          margin-top: 12px;
+          font-size: 22px;
+          color: #999999;
+          line-height: 1.5;
         }
 
         .phone-input-container {

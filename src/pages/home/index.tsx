@@ -1,10 +1,39 @@
 import { View, Text, Image } from "@tarojs/components";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { observer } from "mobx-react";
+import Taro from "@tarojs/taro";
+import { AuthStore } from "@shared/store";
+import { ParentService } from "@shared/server/Parent";
 import "./index.scss";
 
-const Home = () => {
+const Home = observer(() => {
+  const userInfo = AuthStore.userInfo;
+  const children = userInfo && userInfo.children ? userInfo.children : [];
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 页面加载时刷新用户信息
   useEffect(() => {
-    console.log("Home page loaded");
+    const fetchUserProfile = async () => {
+      if (!AuthStore.isLoggedIn) {
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await ParentService.getProfile();
+
+        if (response.code === 10000 && response.data && response.data.parent) {
+          // 更新本地存储的用户信息
+          await AuthStore.saveUserInfo(response.data.parent);
+        }
+      } catch (error) {
+        console.error("获取用户信息失败:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   return (
@@ -18,49 +47,74 @@ const Home = () => {
           </View>
         </View>
 
-        {/* 学生信息卡片 */}
-        <View className="student-card">
-          <View className="student-avatar">
-            <Text className="avatar-text">小</Text>
-          </View>
-          <View className="student-info">
-            <Text className="student-name">小明</Text>
-            <Text className="student-class">大班A班 - 大班</Text>
-          </View>
+        {/* 学生信息卡片列表 */}
+        {children.map((child: any) => {
+          const childName = child.name || "未命名";
+          const childAvatar = child.avatar;
+          const className = child.class && child.class.name ? child.class.name : "未分配班级";
+          const studentId = child.studentId;
+          const completedLessons = child.learningProgress && child.learningProgress.completedLessons ? child.learningProgress.completedLessons : 0;
+          const totalLessons = child.learningProgress && child.learningProgress.totalLessons ? child.learningProgress.totalLessons : 0;
+          const totalStars = child.learningProgress && child.learningProgress.totalStars ? child.learningProgress.totalStars : 0;
+          const pendingLessons = totalLessons - completedLessons;
+          const completionRate = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-          <View className="stats-container">
-            <View className="stat-item">
-              <Text className="stat-value">1</Text>
-              <Text className="stat-label">已完成</Text>
-            </View>
-            <View className="stat-item">
-              <Text className="stat-value">1</Text>
-              <Text className="stat-label">待完成</Text>
-            </View>
-            <View className="stat-item">
-              <Text className="stat-value">50%</Text>
-              <Text className="stat-label">完成率</Text>
-            </View>
-          </View>
+          return (
+            <View key={child._id || child.id} className="student-card">
+              <View className="student-avatar">
+                {childAvatar ? (
+                  <Image
+                    className="avatar-img"
+                    src={childAvatar}
+                    mode="aspectFill"
+                  />
+                ) : (
+                  <Text className="avatar-text">
+                    {childName.charAt(0)}
+                  </Text>
+                )}
+              </View>
+              <View className="student-info">
+                <Text className="student-name">{childName}</Text>
+                <Text className="student-class">
+                  {className}
+                  {studentId && ` • 学号: ${studentId}`}
+                </Text>
+              </View>
 
-          {/* 星星数量 */}
-          <View className="stars-badge">
-            <Text className="star-icon">⭐</Text>
-            <Text className="star-count">1</Text>
-          </View>
+              <View className="stats-container">
+                <View className="stat-item">
+                  <Text className="stat-value">{completedLessons}</Text>
+                  <Text className="stat-label">已完成</Text>
+                </View>
+                <View className="stat-item">
+                  <Text className="stat-value">{pendingLessons}</Text>
+                  <Text className="stat-label">待完成</Text>
+                </View>
+                <View className="stat-item">
+                  <Text className="stat-value">{completionRate}%</Text>
+                  <Text className="stat-label">完成率</Text>
+                </View>
+              </View>
 
-          {/* 操作按钮 */}
-          <View className="action-buttons">
-            <View className="action-btn">
-              <Text className="btn-icon">🏆</Text>
-              <Text className="btn-text">徽章</Text>
+              <View className="stars-badge">
+                <Text className="star-icon">⭐</Text>
+                <Text className="star-count">{totalStars}</Text>
+              </View>
+
+              <View className="action-buttons">
+                <View className="action-btn">
+                  <Text className="btn-icon">🏆</Text>
+                  <Text className="btn-text">徽章</Text>
+                </View>
+                <View className="action-btn">
+                  <Text className="btn-icon">📊</Text>
+                  <Text className="btn-text">报告</Text>
+                </View>
+              </View>
             </View>
-            <View className="action-btn">
-              <Text className="btn-icon">📊</Text>
-              <Text className="btn-text">报告</Text>
-            </View>
-          </View>
-        </View>
+          );
+        })}
 
         {/* 最近活动 */}
         <View className="recent-activity">
@@ -99,6 +153,6 @@ const Home = () => {
       </View>
     </View>
   );
-};
+});
 
 export default Home;

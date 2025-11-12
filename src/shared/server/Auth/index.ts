@@ -22,6 +22,18 @@ interface WechatLoginResponse extends IApiData {
   };
 }
 
+interface WechatPhoneParams {
+  code: string;
+}
+
+interface WechatPhoneResponse extends IApiData {
+  data: {
+    phoneNumber: string;
+    purePhoneNumber: string;
+    countryCode: string;
+  };
+}
+
 class _AuthService {
   /**
    * 微信登录
@@ -29,6 +41,14 @@ class _AuthService {
    */
   wechatLogin(params: WechatLoginParams) {
     return httpRequest.post<WechatLoginResponse>("/auth/wechat-login", params);
+  }
+
+  /**
+   * 获取微信绑定的手机号
+   * @param params code 参数
+   */
+  getWechatPhone(params: WechatPhoneParams) {
+    return httpRequest.post<WechatPhoneResponse>("/auth/wechat-phone", params);
   }
 }
 

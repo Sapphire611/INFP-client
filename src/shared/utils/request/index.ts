@@ -53,6 +53,9 @@ class httpRequest {
   put(url: string, data: any) {
     return this.request({ url, data, method: "PUT" });
   }
+  patch(url: string, data: any) {
+    return this.request({ url, data, method: "PATCH" });
+  }
   delete(url: string, data: any) {
     return this.request({ url, data, method: "DELETE" });
   }

@@ -1,0 +1,5 @@
+export default {
+  navigationBarTitleText: "课程详情",
+  navigationBarBackgroundColor: "#667eea",
+  navigationBarTextStyle: "white" as const,
+};

@@ -36,34 +36,35 @@ const Profile = observer(() => {
       subtitle: "完善个人资料",
       arrow: true,
     },
-    {
-      id: 2,
-      icon: "📱",
-      title: "账号设置",
-      subtitle: "账号安全设置",
-      arrow: true,
-    },
-    {
-      id: 3,
-      icon: "🔔",
-      title: "消息通知",
-      subtitle: "管理通知设置",
-      arrow: true,
-    },
-    {
-      id: 4,
-      icon: "❓",
-      title: "帮助与反馈",
-      subtitle: "常见问题",
-      arrow: true,
-    },
-    {
-      id: 5,
-      icon: "ℹ️",
-      title: "关于我们",
-      subtitle: "版本 1.0.0",
-      arrow: true,
-    },
+    // 暂时隐藏的功能
+    // {
+    //   id: 2,
+    //   icon: "📱",
+    //   title: "账号设置",
+    //   subtitle: "账号安全设置",
+    //   arrow: true,
+    // },
+    // {
+    //   id: 3,
+    //   icon: "🔔",
+    //   title: "消息通知",
+    //   subtitle: "管理通知设置",
+    //   arrow: true,
+    // },
+    // {
+    //   id: 4,
+    //   icon: "❓",
+    //   title: "帮助与反馈",
+    //   subtitle: "常见问题",
+    //   arrow: true,
+    // },
+    // {
+    //   id: 5,
+    //   icon: "ℹ️",
+    //   title: "关于我们",
+    //   subtitle: "版本 1.0.0",
+    //   arrow: true,
+    // },
   ];
 
   return (
