@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from "@tarojs/components";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Taro from "@tarojs/taro";
 import { CourseService } from "@shared/server/Course";
 import "./index.scss";
@@ -26,11 +26,7 @@ const Courses = () => {
   const [loading, setLoading] = useState(true);
   const [activeLevel, setActiveLevel] = useState("all");
 
-  useEffect(() => {
-    fetchCourses();
-  }, [activeLevel]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -62,7 +58,11 @@ const Courses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeLevel]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const handleCourseClick = (courseId: string) => {
     Taro.navigateTo({
