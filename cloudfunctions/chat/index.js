@@ -24,14 +24,50 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'
 
 // 云函数入口函数
 exports.main = async (event, context) => {
-  const { message, history = [] } = event
+  const { message, history = [], userProfile = {} } = event
 
   try {
+    // 构建个性化的系统提示
+    let systemPrompt = '你是一个温暖、善解人意的 AI 助手，专门为用户提供支持。你的回复应该：1) 温和友善，充满同理心 2) 鼓励用户表达真实感受 3) 提供深入、有意义的对话 4) 尊重用户的独特性和创造力。'
+
+    // 如果用户设置了 MBTI，添加个性化信息
+    if (userProfile.mbti) {
+      const mbtiDescriptions = {
+        'INTJ': '建筑师 - 富有想象力和战略性的思想家',
+        'INTP': '逻辑学家 - 具有创造力的发明家',
+        'ENTJ': '指挥官 - 大胆、富有想象力的领导者',
+        'ENTP': '辩论家 - 聪明好奇的思想者',
+        'INFJ': '提倡者 - 安静而神秘的理想主义者',
+        'INFP': '调停者 - 富有诗意和同理心的利他主义者',
+        'ENFJ': '主人公 - 富有魅力和鼓舞人心的领导者',
+        'ENFP': '竞选者 - 热情洋溢和富有创造力的社交家',
+        'ISTJ': '物流师 - 实际和注重事实的个人',
+        'ISFJ': '守卫者 - 非常专注而温暖的守护者',
+        'ESTJ': '总经理 - 出色的管理者',
+        'ESFJ': '执政官 - 极有同情心、受欢迎的社交家',
+        'ISTP': '鉴赏家 - 大胆而实际的实验家',
+        'ISFP': '探险家 - 灵活而有魅力的艺术家',
+        'ESTP': '企业家 - 聪明、精力充沛的冒险家',
+        'ESFP': '表演者 - 自发的、精力充沛的娱乐者'
+      }
+
+      const mbtiDesc = mbtiDescriptions[userProfile.mbti] || userProfile.mbti
+      systemPrompt += `\n\n当前用户是 ${userProfile.mbti} 类型（${mbtiDesc}）。请根据这个人格类型的特点来调整你的回复风格和内容，更好地理解和支持用户。`
+    }
+
+    // 如果用户设置了昵称，使用更亲切的称呼
+    if (userProfile.nickName) {
+      systemPrompt += `\n用户的昵称是"${userProfile.nickName}"，你可以在适当的时候称呼用户。`
+    }
+
+    console.log('用户信息:', userProfile)
+    console.log('系统提示:', systemPrompt)
+
     // 构建对话历史
     const messages = [
       {
         role: 'system',
-        content: '你是一个温暖、善解人意的 AI 助手，需要扮演 INFP 人格类型的用户提供支持。INFP（调停者）是富有创造力、理想主义和同理心的人。你的回复应该：1) 温和友善，充满同理心 2) 鼓励用户表达真实感受 3) 提供深入、有意义的对话 4) 尊重用户的独特性和创造力。'
+        content: systemPrompt
       },
       ...history,
       {
@@ -40,7 +76,7 @@ exports.main = async (event, context) => {
       }
     ]
 
-    // 调用 DeepSeek API
+    // 调用 DeepSeek API（设置15秒超时）
     const response = await axios.post(
       DEEPSEEK_API_URL,
       {
@@ -53,7 +89,8 @@ exports.main = async (event, context) => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-        }
+        },
+        timeout: 15000 // 15秒超时
       }
     )
 
@@ -66,6 +103,7 @@ exports.main = async (event, context) => {
     }
   } catch (error) {
     console.error('DeepSeek API 调用失败:', error.message)
+    console.error('错误详情:', error.response?.data || error)
 
     // 降级到模拟回复
     const fallbackResponses = [

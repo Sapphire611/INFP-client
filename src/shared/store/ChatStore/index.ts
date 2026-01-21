@@ -1,5 +1,6 @@
 import { makeAutoObservable } from "mobx";
 import Taro from "@tarojs/taro";
+import { AuthStore } from "../AuthStore";
 
 // 消息类型
 export interface Message {
@@ -20,6 +21,7 @@ const MESSAGES_KEY = "infp_chat_messages";
 class _ChatStore {
   messages: Message[] = [];
   isLoading = false;
+  lastSendTime = 0; // 上次发送消息的时间戳
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -81,8 +83,24 @@ class _ChatStore {
       return;
     }
 
+    // 检查发送频率限制（5秒内只能发送一次）
+    const now = Date.now();
+    const timeSinceLastSend = now - this.lastSendTime;
+    const MIN_INTERVAL = 5000; // 5秒
+
+    if (timeSinceLastSend < MIN_INTERVAL) {
+      const remainingTime = Math.ceil((MIN_INTERVAL - timeSinceLastSend) / 1000);
+      Taro.showToast({
+        title: `请等待 ${remainingTime} 秒后再发送`,
+        icon: "none",
+        duration: 2000,
+      });
+      return;
+    }
+
     try {
       this.isLoading = true;
+      this.lastSendTime = now; // 更新最后发送时间
 
       // 添加用户消息
       this.addMessage("user", content);
@@ -95,12 +113,22 @@ class _ChatStore {
           content: msg.content,
         }));
 
-      // 调用云函数
+      // 获取用户信息
+      const userProfile = {
+        nickName: AuthStore.userInfo?.nickName || null,
+        mbti: AuthStore.userInfo?.mbti || null,
+      };
+
+      // 调用云函数（设置 25 秒超时）
       const res = await Taro.cloud.callFunction({
         name: "chat",
         data: {
           message: content,
           history: history.slice(0, -1), // 不包括刚添加的用户消息
+          userProfile, // 携带用户信息
+        },
+        config: {
+          timeout: 25000, // 25秒超时
         },
       });
 
