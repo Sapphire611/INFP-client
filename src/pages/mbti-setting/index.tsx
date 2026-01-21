@@ -58,18 +58,19 @@ const MbtiSetting = observer(() => {
       });
 
       console.log("云函数调用结果:", res);
-      console.log("返回的 userInfo:", res.result?.userInfo);
 
-      if (res.result && res.result.success) {
-        // 使用云函数返回的最新用户信息
-        const updatedUserInfo = res.result.userInfo;
+      // 类型安全检查
+      const result = res.result as any;
+      console.log("返回的 userInfo:", result?.userInfo);
+
+      if (result && typeof result === 'object' && result.success) {
+        // 使用云函数返回的最新用户信息，合并到本地信息中
+        const updatedUserInfo = result.userInfo;
         console.log("准备保存到本地的用户信息:", updatedUserInfo);
 
         await AuthStore.saveUserInfo({
-          openid: updatedUserInfo.openid,
-          nickName: updatedUserInfo.nickName || "",
-          avatarUrl: updatedUserInfo.avatarUrl || "",
-          mbti: updatedUserInfo.mbti || "",
+          ...userInfo,
+          ...updatedUserInfo,
         });
 
         console.log("保存到本地成功，当前 AuthStore.userInfo:", AuthStore.userInfo);
@@ -84,7 +85,10 @@ const MbtiSetting = observer(() => {
           Taro.navigateBack();
         }, 1500);
       } else {
-        throw new Error(res.result?.error || "更新失败");
+        const errorMsg = (result && typeof result === 'object' && result.error)
+          ? result.error
+          : "更新失败";
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
       console.error("保存失败:", error);

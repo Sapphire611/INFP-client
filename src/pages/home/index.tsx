@@ -1,4 +1,4 @@
-import { View, Text, Input, Button } from "@tarojs/components";
+import { View, Text, Input, Button, Image } from "@tarojs/components";
 import { observer } from "mobx-react";
 import { useState } from "react";
 import Taro from "@tarojs/taro";
@@ -119,9 +119,17 @@ const Home = observer(() => {
 
             {msg.role === "user" && (
               <View className="avatar user-avatar">
-                <Text className="avatar-emoji">
-                  {AuthStore.userInfo?.nickName?.charAt(0) || "我"}
-                </Text>
+                {AuthStore.userInfo?.avatarUrl ? (
+                  <Image
+                    className="avatar-image"
+                    src={AuthStore.userInfo.avatarUrl}
+                    mode="aspectFill"
+                  />
+                ) : (
+                  <Text className="avatar-emoji">
+                    {AuthStore.userInfo?.nickName?.charAt(0) || "我"}
+                  </Text>
+                )}
               </View>
             )}
           </View>

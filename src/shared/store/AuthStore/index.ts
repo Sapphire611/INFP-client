@@ -1,5 +1,6 @@
 import { makeAutoObservable } from "mobx";
 import Taro from "@tarojs/taro";
+import { ChatStore } from "../ChatStore";
 
 // 微信用户信息接口
 export interface WechatUserInfo {
@@ -87,6 +88,9 @@ class _AuthStore {
 
         await this.saveUserInfo(wechatUserInfo);
 
+        // 登录成功后清除未登录状态下的聊天消息
+        await ChatStore.clearMessages();
+
         Taro.showToast({
           title: "登录成功",
           icon: "success",
@@ -115,6 +119,10 @@ class _AuthStore {
     this.userInfo = null;
     try {
       await Taro.removeStorage({ key: USER_INFO_KEY });
+
+      // 退出登录时清除聊天消息
+      await ChatStore.clearMessages();
+
       Taro.showToast({
         title: "已退出登录",
         icon: "success",

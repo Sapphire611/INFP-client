@@ -54,10 +54,10 @@ const ProfileEdit = observer(() => {
 
       console.log("更新用户信息结果:", res);
 
-      if (res.result && res.result.success) {
-        // 更新本地存储的用户信息
+      if (res.result && typeof res.result === 'object' && 'success' in res.result && res.result.success) {
+        // 更新本地存储的用户信息（保留原有的所有字段）
         await AuthStore.saveUserInfo({
-          openid: userInfo?.openid,
+          ...userInfo,
           nickName: nickName.trim(),
           avatarUrl: avatarUrl,
         });
@@ -72,7 +72,10 @@ const ProfileEdit = observer(() => {
           Taro.navigateBack();
         }, 1500);
       } else {
-        throw new Error(res.result?.error || "更新失败");
+        const errorMsg = (res.result && typeof res.result === 'object' && 'error' in res.result)
+          ? res.result.error
+          : "更新失败";
+        throw new Error(errorMsg as string);
       }
     } catch (error: any) {
       console.error("保存失败:", error);

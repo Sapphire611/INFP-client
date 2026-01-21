@@ -6,3 +6,6 @@ node_modules/
 .DS_Store
 .swc
 .env
+
+# 云函数配置文件（包含敏感信息）
+cloudfunctions/*/config.json

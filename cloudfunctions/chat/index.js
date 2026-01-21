@@ -7,7 +7,19 @@ cloud.init({
 })
 
 // DeepSeek API 配置
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || ''
+// 优先使用环境变量，其次使用配置文件
+let DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || ''
+
+// 如果环境变量不存在，尝试从配置文件读取
+if (!DEEPSEEK_API_KEY) {
+  try {
+    const config = require('./config.json')
+    DEEPSEEK_API_KEY = config.env?.DEEPSEEK_API_KEY || ''
+  } catch (e) {
+    console.log('未找到配置文件，使用默认配置')
+  }
+}
+
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'
 
 // 云函数入口函数
@@ -19,7 +31,7 @@ exports.main = async (event, context) => {
     const messages = [
       {
         role: 'system',
-        content: '你是一个温暖、善解人意的 AI 助手，专门为 INFP 人格类型的用户提供支持。INFP（调停者）是富有创造力、理想主义和同理心的人。你的回复应该：1) 温和友善，充满同理心 2) 鼓励用户表达真实感受 3) 提供深入、有意义的对话 4) 尊重用户的独特性和创造力。'
+        content: '你是一个温暖、善解人意的 AI 助手，需要扮演 INFP 人格类型的用户提供支持。INFP（调停者）是富有创造力、理想主义和同理心的人。你的回复应该：1) 温和友善，充满同理心 2) 鼓励用户表达真实感受 3) 提供深入、有意义的对话 4) 尊重用户的独特性和创造力。'
       },
       ...history,
       {
