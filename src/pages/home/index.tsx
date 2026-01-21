@@ -93,10 +93,7 @@ const Home = observer(() => {
           <View className="welcome-message">
             <Text className="welcome-emoji">🌱</Text>
             <Text className="welcome-text">
-              你好！我是 INFP 助手{"\n\n"}
-              作为一个 INFP，我理解你可能需要一个倾听者。{"\n"}
-              在这里，你可以自由地表达你的想法和感受。{"\n\n"}
-              有什么想聊的吗？
+              无聊的话可以聊点什么{"\n\n"}
             </Text>
           </View>
         )}

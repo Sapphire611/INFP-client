@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Taro from "@tarojs/taro";
 import { Tabbar, TabbarItem } from "@nutui/nutui-react-taro";
-import { Home, User } from "@nutui/icons-react-taro";
+import { Message, User } from "@nutui/icons-react-taro";
 import "./index.scss";
 
 const CustomTabbar = () => {
@@ -74,7 +74,7 @@ const CustomTabbar = () => {
       activeColor="#66bb6a"
       inactiveColor="#9e9e9e"
     >
-      <TabbarItem title="首页" icon={<Home size={20} />} />
+      <TabbarItem title="聊天" icon={<Message size={20} />} />
       <TabbarItem title="我的" icon={<User size={20} />} />
     </Tabbar>
   );
