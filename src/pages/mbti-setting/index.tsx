@@ -43,6 +43,9 @@ const MbtiSetting = observer(() => {
       return;
     }
 
+    console.log("准备保存 MBTI，当前选择:", selectedMbti);
+    console.log("当前用户信息:", userInfo);
+
     try {
       setIsSubmitting(true);
 
@@ -54,16 +57,22 @@ const MbtiSetting = observer(() => {
         },
       });
 
-      console.log("更新 MBTI 结果:", res);
+      console.log("云函数调用结果:", res);
+      console.log("返回的 userInfo:", res.result?.userInfo);
 
       if (res.result && res.result.success) {
-        // 更新本地存储的用户信息
+        // 使用云函数返回的最新用户信息
+        const updatedUserInfo = res.result.userInfo;
+        console.log("准备保存到本地的用户信息:", updatedUserInfo);
+
         await AuthStore.saveUserInfo({
-          openid: userInfo?.openid,
-          nickName: userInfo?.nickName || "",
-          avatarUrl: userInfo?.avatarUrl || "",
-          mbti: selectedMbti,
+          openid: updatedUserInfo.openid,
+          nickName: updatedUserInfo.nickName || "",
+          avatarUrl: updatedUserInfo.avatarUrl || "",
+          mbti: updatedUserInfo.mbti || "",
         });
+
+        console.log("保存到本地成功，当前 AuthStore.userInfo:", AuthStore.userInfo);
 
         Taro.showToast({
           title: "保存成功",

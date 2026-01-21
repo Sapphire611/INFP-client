@@ -1,52 +1,12 @@
-import { View, Text, Input, ScrollView, Button } from "@tarojs/components";
+import { View, Text, Input, Button } from "@tarojs/components";
 import { observer } from "mobx-react";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Taro from "@tarojs/taro";
-import { AuthStore } from "@shared/store";
+import { AuthStore, ChatStore } from "@shared/store";
 import "./index.scss";
 
-interface Message {
-  id: string;
-  type: "user" | "ai";
-  content: string;
-  timestamp: number;
-}
-
 const Home = observer(() => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      type: "ai",
-      content: "你好！我是 INFP 助手 🌱\n\n作为一个 INFP，我理解你可能需要一个倾听者。在这里，你可以自由地表达你的想法和感受。\n\n有什么想聊的吗？",
-      timestamp: Date.now(),
-    },
-  ]);
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<any>(null);
-
-  // 自动滚动到底部
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (scrollViewRef.current) {
-        const query = Taro.createSelectorQuery();
-        query.select("#message-list").boundingClientRect();
-        query.selectViewport().scrollOffset();
-        query.exec((res) => {
-          if (res[0]) {
-            Taro.pageScrollTo({
-              scrollTop: res[0].height,
-              duration: 300,
-            });
-          }
-        });
-      }
-    }, 100);
-  };
 
   // 发送消息
   const handleSend = async () => {
@@ -56,58 +16,41 @@ const Home = observer(() => {
 
     // 检查是否登录
     if (!AuthStore.isLoggedIn) {
-      Taro.showToast({
-        title: "请先登录",
-        icon: "none",
-      });
-      Taro.navigateTo({ url: "/pages/login/index" });
+      // 清空输入框
+      setInputValue("");
+
+      // 添加用户消息
+      ChatStore.addMessage("user", inputValue.trim());
+
+      // 添加系统提示消息
+      ChatStore.addMessage("assistant", "你好，请先登录后再使用 😊");
+
       return;
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: "user",
-      content: inputValue.trim(),
-      timestamp: Date.now(),
-    };
-
-    // 添加用户消息
-    setMessages((prev) => [...prev, userMessage]);
+    const message = inputValue.trim();
     setInputValue("");
-    setIsLoading(true);
 
-    try {
-      // 调用云函数
-      const res = await Taro.cloud.callFunction({
-        name: "chat",
-        data: {
-          message: userMessage.content,
-        },
-      });
+    // 使用 ChatStore 发送消息
+    await ChatStore.sendMessage(message);
+  };
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: res.result.reply || "抱歉，我现在无法回复。",
-        timestamp: Date.now(),
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      console.error("调用云函数失败:", error);
-
-      // 如果云函数调用失败，使用本地模拟回复
-      const fallbackMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: "很抱歉，我现在遇到了一些技术问题。\n\n作为 INFP，我们都知道，有时候生活就是这样充满不确定性。但请不要担心，你可以稍后再试。",
-        timestamp: Date.now(),
-      };
-
-      setMessages((prev) => [...prev, fallbackMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+  // 清空对话
+  const handleClear = () => {
+    Taro.showModal({
+      title: "清空对话",
+      content: "确定要清空所有对话记录吗？",
+      success: (res) => {
+        if (res.confirm) {
+          ChatStore.clearMessages();
+          Taro.showToast({
+            title: "已清空",
+            icon: "success",
+            duration: 1500,
+          });
+        }
+      },
+    });
   };
 
   // 格式化时间
@@ -120,28 +63,51 @@ const Home = observer(() => {
   };
 
   return (
-    <View className="home-page">
+    <View className="home-page" style={{ height: "100vh", overflow: "hidden" }}>
       {/* 顶部标题 */}
       <View className="chat-header">
-        <Text className="header-title">INFP 心灵角落</Text>
-        <Text className="header-subtitle">倾听・理解・陪伴</Text>
+        <View className="header-content">
+          <View className="header-text">
+            <Text className="header-title">INFP的小剧场</Text>
+            <Text className="header-subtitle">做你自己就好</Text>
+          </View>
+          {ChatStore.messages.length > 0 && (
+            <View className="clear-button" onClick={handleClear}>
+              <Text className="clear-icon">🗑️</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* 消息列表 */}
-      <ScrollView
+      <View
         id="message-list"
-        ref={scrollViewRef}
-        scrollY
         className="message-list"
-        scrollIntoView={`msg-${messages[messages.length - 1]?.id}`}
+        style={{
+          height: "calc(100vh - 280rpx)",
+          overflowY: "scroll"
+        }}
       >
-        {messages.map((msg) => (
+
+        {ChatStore.messages.length === 0 && (
+          <View className="welcome-message">
+            <Text className="welcome-emoji">🌱</Text>
+            <Text className="welcome-text">
+              你好！我是 INFP 助手{"\n\n"}
+              作为一个 INFP，我理解你可能需要一个倾听者。{"\n"}
+              在这里，你可以自由地表达你的想法和感受。{"\n\n"}
+              有什么想聊的吗？
+            </Text>
+          </View>
+        )}
+
+        {ChatStore.messages.map((msg) => (
           <View
             key={msg.id}
             id={`msg-${msg.id}`}
-            className={`message-item ${msg.type}`}
+            className={`message-item ${msg.role}`}
           >
-            {msg.type === "ai" && (
+            {msg.role === "assistant" && (
               <View className="avatar ai-avatar">
                 <Text className="avatar-emoji">🌱</Text>
               </View>
@@ -154,7 +120,7 @@ const Home = observer(() => {
               <Text className="message-time">{formatTime(msg.timestamp)}</Text>
             </View>
 
-            {msg.type === "user" && (
+            {msg.role === "user" && (
               <View className="avatar user-avatar">
                 <Text className="avatar-emoji">
                   {AuthStore.userInfo?.nickName?.charAt(0) || "我"}
@@ -164,8 +130,8 @@ const Home = observer(() => {
           </View>
         ))}
 
-        {isLoading && (
-          <View className="message-item ai">
+        {ChatStore.isLoading && (
+          <View className="message-item assistant">
             <View className="avatar ai-avatar">
               <Text className="avatar-emoji">🌱</Text>
             </View>
@@ -176,7 +142,7 @@ const Home = observer(() => {
             </View>
           </View>
         )}
-      </ScrollView>
+      </View>
 
       {/* 输入区域 */}
       <View className="input-area">
@@ -188,13 +154,13 @@ const Home = observer(() => {
             value={inputValue}
             onInput={(e) => setInputValue(e.detail.value)}
             onConfirm={handleSend}
-            disabled={isLoading}
+            disabled={ChatStore.isLoading}
             confirmType="send"
           />
           <Button
             className={`send-button ${inputValue.trim() ? "active" : ""}`}
             onClick={handleSend}
-            disabled={isLoading || !inputValue.trim()}
+            disabled={ChatStore.isLoading || !inputValue.trim()}
           >
             <Text className="send-icon">📤</Text>
           </Button>

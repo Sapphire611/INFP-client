@@ -4,7 +4,7 @@
   "description": "INFP AI 聊天云函数",
   "main": "index.js",
   "dependencies": {
-    "wx-server-sdk": "~2.6.3",
-    "axios": "^1.6.0"
+    "axios": "^1.13.2",
+    "wx-server-sdk": "~2.6.3"
   }
 }

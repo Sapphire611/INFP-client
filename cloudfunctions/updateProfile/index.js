@@ -18,6 +18,9 @@ exports.main = async (event, context) => {
     // 从前端获取更新的用户信息
     const { nickName, avatarUrl, mbti } = event
 
+    console.log('收到的更新数据:', { nickName, avatarUrl, mbti })
+    console.log('用户 OPENID:', OPENID)
+
     // 构建更新数据
     const updateData = {
       lastUpdateTime: db.serverDate()
@@ -31,6 +34,7 @@ exports.main = async (event, context) => {
     }
     if (mbti !== undefined) {
       updateData.mbti = mbti
+      console.log('准备更新 MBTI:', mbti)
     }
 
     // 查询用户
@@ -38,6 +42,8 @@ exports.main = async (event, context) => {
     const { data: existingUsers } = await userCollection.where({
       openid: OPENID
     }).get()
+
+    console.log('查询到的用户数量:', existingUsers.length)
 
     if (existingUsers.length === 0) {
       return {
@@ -47,21 +53,28 @@ exports.main = async (event, context) => {
     }
 
     const userData = existingUsers[0]
+    console.log('更新前的用户数据:', userData)
 
     // 更新用户信息
-    await userCollection.doc(userData._id).update({
+    const updateResult = await userCollection.doc(userData._id).update({
       data: updateData
     })
+
+    console.log('数据库更新结果:', updateResult)
+
+    // 重新查询最新的用户数据
+    const { data: updatedUser } = await userCollection.doc(userData._id).get()
+    console.log('更新后的用户数据:', updatedUser)
 
     // 返回更新后的用户信息
     return {
       success: true,
       userInfo: {
-        openid: userData.openid,
-        nickName: nickName || userData.nickName,
-        avatarUrl: avatarUrl || userData.avatarUrl,
-        mbti: mbti !== undefined ? mbti : (userData.mbti || ''),
-        _id: userData._id
+        openid: updatedUser.openid,
+        nickName: updatedUser.nickName,
+        avatarUrl: updatedUser.avatarUrl,
+        mbti: updatedUser.mbti || '',
+        _id: updatedUser._id
       }
     }
   } catch (error) {

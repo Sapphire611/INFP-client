@@ -46,8 +46,9 @@ exports.main = async (event, context) => {
         data: updateData
       })
 
-      // 更新本地数据对象
-      userData = { ...userData, ...updateData }
+      // 重新从数据库查询最新的用户数据，确保包含所有字段（包括 mbti）
+      const { data: updatedUsers } = await userCollection.doc(userData._id).get()
+      userData = updatedUsers
     } else {
       // 新用户，创建用户记录
       const createResult = await userCollection.add({
