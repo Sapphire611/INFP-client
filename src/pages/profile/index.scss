@@ -123,6 +123,32 @@
               margin-bottom: 12rpx;
             }
 
+            .user-tag {
+              display: block;
+              font-size: 26rpx;
+              color: #999999;
+            }
+
+            .mbti-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 6rpx;
+              padding: 8rpx 16rpx;
+              border-radius: 20rpx;
+              border: 2rpx solid;
+
+              .mbti-emoji {
+                font-size: 28rpx;
+                line-height: 1;
+              }
+
+              .mbti-text {
+                font-size: 24rpx;
+                font-weight: 600;
+                line-height: 1;
+              }
+            }
+
             .user-phone {
               display: block;
               font-size: 26rpx;

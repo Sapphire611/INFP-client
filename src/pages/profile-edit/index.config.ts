@@ -1,5 +1,5 @@
 export default {
   navigationBarTitleText: "个人信息",
-  navigationBarBackgroundColor: "#fff",
-  navigationBarTextStyle: "black",
+  navigationBarBackgroundColor: "#66bb6a",
+  navigationBarTextStyle: "white",
 };

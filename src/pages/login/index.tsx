@@ -36,17 +36,16 @@ const Login = observer(() => {
         {/* Logo 区域 */}
         <View className="logo-container">
           <View className="logo">
-            <Text className="logo-emoji">🎓</Text>
+            <Text className="logo-emoji">🌱</Text>
           </View>
-          <Text className="logo-title">雷式幼儿园</Text>
+          <Text className="logo-title">INFP 心灵角落</Text>
           <View className="logo-underline"></View>
         </View>
 
         {/* 欢迎文字 */}
         <View className="welcome-text">
-          <Text className="title">欢迎使用</Text>
-          <Text className="subtitle">家长服务平台</Text>
-          <Text className="description">让家园沟通更便捷</Text>
+          <Text className="title">欢迎回来</Text>
+          <Text className="description">在这里，做真实的自己</Text>
         </View>
 
         {/* 登录按钮 */}
@@ -65,19 +64,19 @@ const Login = observer(() => {
             </View>
           </Button>
 
-          {/* 功能亮点 */}
+          {/* INFP 特质 */}
           <View className="features">
             <View className="feature-item">
-              <Text className="feature-icon">📸</Text>
-              <Text className="feature-text">实时动态</Text>
+              <Text className="feature-icon">🎨</Text>
+              <Text className="feature-text">富有创造力</Text>
             </View>
             <View className="feature-item">
-              <Text className="feature-icon">📅</Text>
-              <Text className="feature-text">课程安排</Text>
+              <Text className="feature-icon">💝</Text>
+              <Text className="feature-text">同理心强</Text>
             </View>
             <View className="feature-item">
-              <Text className="feature-icon">⭐</Text>
-              <Text className="feature-text">成长记录</Text>
+              <Text className="feature-icon">🌟</Text>
+              <Text className="feature-text">理想主义</Text>
             </View>
           </View>
         </View>

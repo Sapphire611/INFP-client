@@ -1,42 +1,27 @@
 export default {
   pages: [
     "pages/home/index",
-    "pages/tasks/index",
-    "pages/courses/index",
-    "pages/courses/detail/index",
-    "pages/stars/index",
     "pages/profile/index",
-    "pages/index/index",
     "pages/login/index",
     "pages/profile-edit/index",
+    "pages/mbti-setting/index",
   ],
   window: {
     backgroundTextStyle: "light",
-    navigationBarBackgroundColor: "#fff",
+    navigationBarBackgroundColor: "#66bb6a",
     navigationBarTitleText: "",
-    navigationBarTextStyle: "black",
+    navigationBarTextStyle: "white",
   },
   tabBar: {
     custom: true,
-    color: "#999",
-    selectedColor: "#1890ff",
-    backgroundColor: "#fff",
+    color: "#9e9e9e",
+    selectedColor: "#66bb6a",
+    backgroundColor: "#f8fff9",
+    borderStyle: "white",
     list: [
       {
         pagePath: "pages/home/index",
         text: "首页"
-      },
-      {
-        pagePath: "pages/tasks/index",
-        text: "任务"
-      },
-      {
-        pagePath: "pages/courses/index",
-        text: "课程"
-      },
-      {
-        pagePath: "pages/stars/index",
-        text: "星星"
       },
       {
         pagePath: "pages/profile/index",

@@ -1,222 +1,215 @@
 .home-page {
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 
-  .home-content {
-    height: 100vh;
+  // 顶部标题
+  .chat-header {
+    background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+    padding: 40rpx 32rpx 24rpx;
+    text-align: center;
+    box-shadow: 0 4rpx 16rpx rgba(102, 187, 106, 0.15);
+
+    .header-title {
+      font-size: 40rpx;
+      font-weight: bold;
+      color: #ffffff;
+      display: block;
+      margin-bottom: 8rpx;
+    }
+
+    .header-subtitle {
+      font-size: 24rpx;
+      color: rgba(255, 255, 255, 0.9);
+      display: block;
+      letter-spacing: 4rpx;
+    }
+  }
+
+  // 消息列表
+  .message-list {
+    flex: 1;
     padding: 24rpx;
-    padding-bottom: 140rpx;
-    width: 100%;
-    box-sizing: border-box;
+    padding-bottom: 160rpx;
     overflow-y: auto;
-  }
 
-  .parent-center-card {
-    margin-bottom: 24rpx;
-    border-radius: 24rpx;
-    overflow: hidden;
-
-    .card-bg {
-      background: linear-gradient(135deg, #e8f4f8 0%, #f0f4f8 100%);
-      padding: 60rpx 40rpx;
-      position: relative;
-
-      .card-title {
-        display: block;
-        font-size: 48rpx;
-        font-weight: 600;
-        color: #2c5f7c;
-        margin-bottom: 16rpx;
-        text-align: center;
-      }
-
-      .card-subtitle {
-        display: block;
-        font-size: 28rpx;
-        color: #5a7d8f;
-        text-align: center;
-      }
-    }
-  }
-
-  .student-card {
-    background: #ffffff;
-    border-radius: 24rpx;
-    padding: 40rpx;
-    margin-bottom: 24rpx;
-    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-
-    .student-avatar {
-      width: 120rpx;
-      height: 120rpx;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #a8d8ea 0%, #b8e6f5 100%);
+    .message-item {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24rpx;
-      overflow: hidden;
-
-      .avatar-img {
-        width: 100%;
-        height: 100%;
-      }
-
-      .avatar-text {
-        font-size: 56rpx;
-        color: #ffffff;
-        font-weight: 500;
-      }
-    }
-
-    .student-info {
-      text-align: center;
       margin-bottom: 32rpx;
+      animation: messageSlideIn 0.3s ease-out;
 
-      .student-name {
-        display: block;
-        font-size: 36rpx;
-        font-weight: 600;
-        color: #333333;
-        margin-bottom: 12rpx;
-      }
+      &.ai {
+        justify-content: flex-start;
 
-      .student-class {
-        display: block;
-        font-size: 26rpx;
-        color: #999999;
-      }
-    }
-
-    .stats-container {
-      display: flex;
-      justify-content: space-around;
-      padding: 32rpx 0;
-      border-top: 1rpx solid #f0f0f0;
-      border-bottom: 1rpx solid #f0f0f0;
-      margin-bottom: 32rpx;
-
-      .stat-item {
-        text-align: center;
-
-        .stat-value {
-          display: block;
-          font-size: 40rpx;
-          font-weight: 600;
-          color: #333333;
-          margin-bottom: 8rpx;
-        }
-
-        .stat-label {
-          display: block;
-          font-size: 24rpx;
-          color: #999999;
+        .message-bubble {
+          background: linear-gradient(135deg, #ffffff 0%, #f8fff9 100%);
+          border: 2rpx solid #c8e6c9;
+          box-shadow: 0 4rpx 12rpx rgba(102, 187, 106, 0.1);
         }
       }
-    }
 
-    .stars-badge {
-      background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-      border-radius: 16rpx;
-      padding: 24rpx;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16rpx;
-      margin-bottom: 24rpx;
+      &.user {
+        justify-content: flex-end;
 
-      .star-icon {
-        font-size: 48rpx;
+        .message-bubble {
+          background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+          color: #ffffff;
+          box-shadow: 0 4rpx 12rpx rgba(102, 187, 106, 0.25);
+        }
+
+        .message-time {
+          text-align: right;
+        }
       }
 
-      .star-count {
-        font-size: 56rpx;
-        font-weight: 700;
-        color: #e17055;
-      }
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 16rpx;
-
-      .action-btn {
-        flex: 1;
-        background: #f8f9fa;
-        border: 2rpx solid #e9ecef;
-        border-radius: 16rpx;
-        padding: 24rpx;
+      .avatar {
+        width: 72rpx;
+        height: 72rpx;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 12rpx;
+        flex-shrink: 0;
 
-        .btn-icon {
-          font-size: 32rpx;
+        &.ai-avatar {
+          background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+          margin-right: 16rpx;
+          box-shadow: 0 4rpx 12rpx rgba(102, 187, 106, 0.25);
         }
 
-        .btn-text {
-          font-size: 28rpx;
-          color: #333333;
+        &.user-avatar {
+          background: linear-gradient(135deg, #aed581 0%, #c5e1a5 100%);
+          margin-left: 16rpx;
+          box-shadow: 0 4rpx 12rpx rgba(174, 213, 129, 0.25);
+        }
+
+        .avatar-emoji {
+          font-size: 32rpx;
+        }
+      }
+
+      .message-content {
+        max-width: 480rpx;
+        display: flex;
+        flex-direction: column;
+
+        .message-bubble {
+          padding: 24rpx;
+          border-radius: 24rpx;
+          word-break: break-all;
+          white-space: pre-wrap;
+
+          &.loading {
+            padding: 20rpx 32rpx;
+
+            .loading-dots {
+              font-size: 28rpx;
+              color: #66bb6a;
+              animation: pulse 1.5s infinite;
+            }
+          }
+
+          .message-text {
+            font-size: 30rpx;
+            line-height: 1.6;
+          }
+        }
+
+        .message-time {
+          font-size: 20rpx;
+          color: #9e9e9e;
+          margin-top: 8rpx;
+          padding: 0 12rpx;
         }
       }
     }
   }
 
-  .recent-activity {
-    .section-title {
-      display: block;
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #333333;
-      margin-bottom: 24rpx;
-    }
+  // 输入区域
+  .input-area {
+    position: fixed;
+    bottom: 140rpx;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20rpx);
+    border-top: 2rpx solid #c8e6c9;
+    padding: 16rpx 24rpx;
+    padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+    box-shadow: 0 -4rpx 16rpx rgba(102, 187, 106, 0.1);
 
-    .activity-list {
-      .activity-item {
-        background: #ffffff;
-        border-radius: 16rpx;
-        padding: 24rpx;
-        margin-bottom: 16rpx;
+    .input-container {
+      display: flex;
+      align-items: center;
+      background: #f1f8f4;
+      border-radius: 48rpx;
+      padding: 8rpx 16rpx;
+      border: 2rpx solid #c8e6c9;
+
+      .message-input {
+        flex: 1;
+        padding: 16rpx 24rpx;
+        font-size: 30rpx;
+        background: transparent;
+        color: #2e7d32;
+
+        &::placeholder {
+          color: #a5d6a7;
+        }
+      }
+
+      .send-button {
+        width: 72rpx;
+        height: 72rpx;
+        border-radius: 50%;
+        background: #e0e0e0;
         display: flex;
         align-items: center;
-        gap: 20rpx;
+        justify-content: center;
+        transition: all 0.3s;
+        padding: 0;
+        margin: 0;
+        border: none;
 
-        .activity-icon {
-          width: 80rpx;
-          height: 80rpx;
-          border-radius: 50%;
-          background: #e3f2fd;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-
-          .icon-img {
-            width: 100%;
-            height: 100%;
-          }
+        &.active {
+          background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+          box-shadow: 0 4rpx 12rpx rgba(102, 187, 106, 0.3);
+          transform: scale(1.05);
         }
 
-        .activity-info {
-          flex: 1;
+        &::after {
+          border: none;
+        }
 
-          .activity-title {
-            display: block;
-            font-size: 28rpx;
-            color: #333333;
-            margin-bottom: 8rpx;
-          }
-
-          .activity-time {
-            display: block;
-            font-size: 24rpx;
-            color: #999999;
-          }
+        .send-icon {
+          font-size: 36rpx;
         }
       }
     }
+  }
+}
+
+// 动画
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }

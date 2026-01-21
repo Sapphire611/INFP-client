@@ -1,0 +1,154 @@
+.mbti-setting-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+
+  .page-content {
+    padding: 30px 30px 120px;
+
+    // 标题说明区域
+    .header-section {
+      margin-bottom: 30px;
+      padding: 30px;
+      background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+      border-radius: 20px;
+      text-align: center;
+
+      .page-title {
+        display: block;
+        font-size: 36px;
+        font-weight: bold;
+        color: #ffffff;
+        margin-bottom: 12px;
+      }
+
+      .page-description {
+        display: block;
+        font-size: 24px;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.6;
+      }
+    }
+
+    // MBTI 类型列表
+    .mbti-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 30px;
+
+      .mbti-item {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 3px solid transparent;
+
+        &.selected {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        &:active {
+          transform: scale(0.98);
+        }
+
+        .mbti-item-content {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 20px;
+
+          .mbti-type-badge {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+
+            .mbti-emoji {
+              font-size: 48px;
+            }
+          }
+
+          .mbti-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            .mbti-name {
+              font-size: 30px;
+              font-weight: bold;
+              color: #333333;
+            }
+
+            .mbti-description {
+              font-size: 24px;
+              color: #666666;
+              line-height: 1.5;
+            }
+          }
+        }
+
+        .check-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          font-size: 32px;
+          font-weight: bold;
+          flex-shrink: 0;
+          margin-left: 16px;
+        }
+      }
+    }
+
+    // 保存按钮区域
+    .button-section {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 30px;
+      background: #ffffff;
+      box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+
+      .save-button {
+        width: 100%;
+        height: 96px;
+        background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+        border-radius: 48px;
+        border: none;
+        font-size: 32px;
+        font-weight: bold;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(102, 187, 106, 0.3);
+        transition: all 0.3s ease;
+
+        &::after {
+          border: none;
+        }
+
+        &:active {
+          transform: scale(0.98);
+          box-shadow: 0 4px 12px rgba(102, 187, 106, 0.3);
+        }
+
+        &.button-loading {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+}

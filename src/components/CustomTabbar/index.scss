@@ -1,4 +1,4 @@
-// 确保 Tabbar 正确定位和布局
+// INFP 绿色主题 Tabbar
 .nut-tabbar {
   position: fixed !important;
   bottom: 0 !important;
@@ -11,6 +11,12 @@
   padding-bottom: constant(safe-area-inset-bottom) !important;
   padding-bottom: env(safe-area-inset-bottom) !important;
   box-sizing: content-box !important;
+
+  // 绿色主题背景
+  background: linear-gradient(180deg, #ffffff 0%, #f8fff9 100%) !important;
+  border-top: 2rpx solid #c8e6c9 !important;
+  box-shadow: 0 -4rpx 16rpx rgba(102, 187, 106, 0.08) !important;
+  backdrop-filter: blur(20rpx);
 
   &__list {
     width: 100% !important;
@@ -27,6 +33,24 @@
     justify-content: center !important;
     height: 100% !important;
     padding: 12rpx 0 !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+
+    // 激活态背景
+    &--active {
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        height: 70%;
+        background: linear-gradient(135deg, rgba(102, 187, 106, 0.1) 0%, rgba(129, 199, 132, 0.08) 100%);
+        border-radius: 24rpx;
+        z-index: -1;
+      }
+    }
 
     &__icon {
       height: 48rpx !important;
@@ -34,10 +58,16 @@
       align-items: center !important;
       justify-content: center !important;
       margin-bottom: 6rpx !important;
+      transition: transform 0.3s ease !important;
+    }
+
+    &--active &__icon {
+      transform: scale(1.1) !important;
     }
 
     &__text {
       font-size: 24rpx !important;
+      font-weight: 500 !important;
     }
   }
 }

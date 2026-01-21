@@ -3,29 +3,23 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import Taro from "@tarojs/taro";
 import { AuthStore } from "@shared/store";
-import { ParentService } from "@shared/server/Parent";
 import "./index.scss";
 
 const ProfileEdit = observer(() => {
   const userInfo = AuthStore.userInfo;
 
   // 本地状态
-  const [name, setName] = useState(userInfo?.name || "");
-  const [phone, setPhone] = useState(userInfo?.phone || "");
-  const [avatar, setAvatar] = useState(userInfo?.avatar || "");
+  const [nickName, setNickName] = useState(userInfo?.nickName || "");
+  const [avatarUrl, setAvatarUrl] = useState(userInfo?.avatarUrl || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * 选择头像 - 使用微信新的头像授权方式
-   * 从 2023 年开始，getUserProfile 已废弃
-   * 需要使用 button open-type="chooseAvatar"
+   * 选择头像
    */
   const handleChooseAvatar = (e: any) => {
-    const { avatarUrl } = e.detail;
-    if (avatarUrl) {
-      // TODO: 上传图片到服务器
-      // 现在先使用临时路径
-      setAvatar(avatarUrl);
+    const { avatarUrl: newAvatarUrl } = e.detail;
+    if (newAvatarUrl) {
+      setAvatarUrl(newAvatarUrl);
       Taro.showToast({
         title: "头像已选择",
         icon: "success",
@@ -34,38 +28,13 @@ const ProfileEdit = observer(() => {
   };
 
   /**
-   * 验证手机号
-   */
-  const validatePhone = (phoneNumber: string) => {
-    const phoneRegex = /^1[3-9]\d{9}$/;
-    return phoneRegex.test(phoneNumber);
-  };
-
-  /**
    * 保存个人信息
    */
   const handleSave = async () => {
-    // 验证姓名
-    if (!name || name.trim().length === 0) {
+    // 验证昵称
+    if (!nickName || nickName.trim().length === 0) {
       Taro.showToast({
-        title: "请输入姓名",
-        icon: "none",
-      });
-      return;
-    }
-
-    // 验证手机号（必填）
-    if (!phone || phone.trim().length === 0) {
-      Taro.showToast({
-        title: "请输入手机号",
-        icon: "none",
-      });
-      return;
-    }
-
-    if (!validatePhone(phone)) {
-      Taro.showToast({
-        title: "请输入正确的手机号",
+        title: "请输入昵称",
         icon: "none",
       });
       return;
@@ -74,16 +43,24 @@ const ProfileEdit = observer(() => {
     try {
       setIsSubmitting(true);
 
-      // 调用后端 API 更新用户信息
-      const response = await ParentService.updateProfile({
-        name: name.trim(),
-        phone: phone || undefined,
-        avatar: avatar || undefined,
+      // 调用云函数更新用户信息
+      const res = await Taro.cloud.callFunction({
+        name: "updateProfile",
+        data: {
+          nickName: nickName.trim(),
+          avatarUrl: avatarUrl,
+        },
       });
 
-      if (response.data && response.data.parent) {
+      console.log("更新用户信息结果:", res);
+
+      if (res.result && res.result.success) {
         // 更新本地存储的用户信息
-        await AuthStore.saveUserInfo(response.data.parent);
+        await AuthStore.saveUserInfo({
+          openid: userInfo?.openid,
+          nickName: nickName.trim(),
+          avatarUrl: avatarUrl,
+        });
 
         Taro.showToast({
           title: "保存成功",
@@ -95,12 +72,12 @@ const ProfileEdit = observer(() => {
           Taro.navigateBack();
         }, 1500);
       } else {
-        throw new Error("更新失败");
+        throw new Error(res.result?.error || "更新失败");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("保存失败:", error);
       Taro.showToast({
-        title: "保存失败，请重试",
+        title: error.message || "保存失败，请重试",
         icon: "none",
       });
     } finally {
@@ -120,12 +97,12 @@ const ProfileEdit = observer(() => {
             onChooseAvatar={handleChooseAvatar}
           >
             <View className="avatar-container">
-              {avatar ? (
-                <Image className="avatar-image" src={avatar} mode="aspectFill" />
+              {avatarUrl ? (
+                <Image className="avatar-image" src={avatarUrl} mode="aspectFill" />
               ) : (
                 <View className="avatar-placeholder">
                   <Text className="avatar-placeholder-text">
-                    {name?.charAt(0) || "头"}
+                    {nickName?.charAt(0) || "头"}
                   </Text>
                 </View>
               )}
@@ -139,36 +116,19 @@ const ProfileEdit = observer(() => {
 
         {/* 表单区域 */}
         <View className="form-section">
-          {/* 姓名 */}
+          {/* 昵称 */}
           <View className="form-item">
             <View className="form-label-row">
-              <Text className="form-label">姓名</Text>
+              <Text className="form-label">昵称</Text>
               <Text className="required-mark">*</Text>
             </View>
             <Input
               className="form-input"
               type="nickname"
-              placeholder="请输入您的姓名（点击可使用微信昵称）"
-              value={name}
-              onInput={(e) => setName(e.detail.value)}
+              placeholder="请输入您的昵称"
+              value={nickName}
+              onInput={(e) => setNickName(e.detail.value)}
               maxlength={20}
-            />
-            <Text className="input-hint">💡 输入框会提示使用微信昵称</Text>
-          </View>
-
-          {/* 手机号 */}
-          <View className="form-item">
-            <View className="form-label-row">
-              <Text className="form-label">手机号</Text>
-              <Text className="required-mark">*</Text>
-            </View>
-            <Input
-              className="form-input"
-              type="number"
-              placeholder="请输入手机号"
-              value={phone}
-              onInput={(e) => setPhone(e.detail.value)}
-              maxlength={11}
             />
           </View>
 
@@ -176,7 +136,7 @@ const ProfileEdit = observer(() => {
           <View className="form-tips">
             <Text className="tips-icon">💡</Text>
             <Text className="tips-text">
-              完善个人信息有助于老师更好地了解您
+              完善个人信息后可以更好地使用服务
             </Text>
           </View>
         </View>

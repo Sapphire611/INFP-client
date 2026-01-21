@@ -43,7 +43,7 @@
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -146,7 +146,7 @@
 
     // 欢迎文字
     .welcome-text {
-      margin-bottom: 70px;
+      margin-bottom: 40px;
       text-align: center;
       animation: slideUp 0.8s ease-out 0.2s backwards;
 
@@ -175,6 +175,99 @@
       }
     }
 
+    // 用户信息输入区域
+    .user-info-section {
+      width: 100%;
+      margin-bottom: 30px;
+      animation: slideUp 0.8s ease-out 0.3s backwards;
+
+      .section-label {
+        display: block;
+        font-size: 24px;
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+
+      // 头像选择
+      .avatar-section {
+        margin-bottom: 30px;
+
+        .avatar-button {
+          width: 120px;
+          height: 120px;
+          margin: 0 auto;
+          display: block;
+          padding: 0;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 60px;
+          border: 3px solid rgba(255, 255, 255, 0.5);
+          backdrop-filter: blur(10px);
+          overflow: hidden;
+          transition: all 0.3s ease;
+
+          &::after {
+            border: none;
+          }
+
+          &:active {
+            transform: scale(0.95);
+            border-color: rgba(255, 255, 255, 0.8);
+          }
+
+          .avatar-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 60px;
+          }
+
+          .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            .avatar-icon {
+              font-size: 40px;
+            }
+
+            .avatar-text {
+              font-size: 20px;
+              color: rgba(255, 255, 255, 0.9);
+              font-weight: 500;
+            }
+          }
+        }
+      }
+
+      // 昵称输入
+      .nickname-section {
+        .nickname-input {
+          width: 100%;
+          height: 90px;
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 45px;
+          border: 3px solid rgba(255, 255, 255, 0.5);
+          padding: 0 30px;
+          font-size: 28px;
+          color: #333;
+          text-align: center;
+          box-sizing: border-box;
+          box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+
+          &:focus {
+            border-color: rgba(102, 187, 106, 0.8);
+            box-shadow: 0 5px 25px rgba(102, 187, 106, 0.2);
+          }
+        }
+      }
+    }
+
     // 登录按钮容器
     .login-button-container {
       width: 100%;
@@ -184,10 +277,10 @@
       .login-button {
         width: 100%;
         height: 100px;
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fff9 100%);
         border-radius: 50px;
-        border: none;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 3px solid rgba(102, 187, 106, 0.3);
+        box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
         margin-bottom: 40px;
         overflow: visible;
         transition: all 0.3s ease;
@@ -203,7 +296,8 @@
 
         &:active {
           transform: scale(0.98);
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 5px 20px rgba(102, 187, 106, 0.4);
+          background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
         }
 
         .button-content {
@@ -222,7 +316,7 @@
           .button-text {
             font-size: 32px;
             font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;

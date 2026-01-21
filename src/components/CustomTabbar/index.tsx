@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Taro from "@tarojs/taro";
 import { Tabbar, TabbarItem } from "@nutui/nutui-react-taro";
-import { Home, Checklist, Book, Star, User } from "@nutui/icons-react-taro";
+import { Home, User } from "@nutui/icons-react-taro";
 import "./index.scss";
 
 const CustomTabbar = () => {
@@ -15,14 +15,9 @@ const CustomTabbar = () => {
 
     if (route.includes("home")) {
       return 0;
-    } else if (route.includes("tasks")) {
+    }
+    if (route.includes("profile")) {
       return 1;
-    } else if (route.includes("courses")) {
-      return 2;
-    } else if (route.includes("stars")) {
-      return 3;
-    } else if (route.includes("profile")) {
-      return 4;
     }
     return 0;
   };
@@ -57,9 +52,6 @@ const CustomTabbar = () => {
     // 页面路径映射
     const pathMap = [
       "/pages/home/index",
-      "/pages/tasks/index",
-      "/pages/courses/index",
-      "/pages/stars/index",
       "/pages/profile/index",
     ];
 
@@ -79,13 +71,10 @@ const CustomTabbar = () => {
     <Tabbar
       value={active}
       onSwitch={handleSwitch}
-      activeColor="#1890ff"
-      inactiveColor="#999"
+      activeColor="#66bb6a"
+      inactiveColor="#9e9e9e"
     >
       <TabbarItem title="首页" icon={<Home size={20} />} />
-      <TabbarItem title="任务" icon={<Checklist size={20} />} />
-      <TabbarItem title="课程" icon={<Book size={20} />} />
-      <TabbarItem title="星星" icon={<Star size={20} />} />
       <TabbarItem title="我的" icon={<User size={20} />} />
     </Tabbar>
   );

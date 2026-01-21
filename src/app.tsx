@@ -11,6 +11,14 @@ const App = (props) => {
     AuthStore.loadLocalData();
 
     if (process.env.TARO_ENV === "weapp") {
+      // 初始化云开发
+      if (Taro.cloud) {
+        Taro.cloud.init({
+          env: process.env.CLOUD_ENV_ID || "cloud1-9gjxjt3ab26adb86",
+          traceUser: true,
+        });
+        console.log("云开发初始化成功，环境ID:", process.env.CLOUD_ENV_ID);
+      }
       // 检测新版本
       if (Taro.getUpdateManager) {
         const updateManager = Taro.getUpdateManager();

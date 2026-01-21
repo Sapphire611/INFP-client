@@ -2,6 +2,7 @@ import { View, Text, Button, Image } from "@tarojs/components";
 import { observer } from "mobx-react";
 import Taro from "@tarojs/taro";
 import { AuthStore } from "@shared/store";
+import { getMbtiColors, getMbtiEmoji } from "@shared/utils";
 import "./index.scss";
 
 const Profile = observer(() => {
@@ -31,40 +32,25 @@ const Profile = observer(() => {
   const menuItems = [
     {
       id: 1,
-      icon: "👤",
-      title: "个人信息",
-      subtitle: "完善个人资料",
+      icon: "🌱",
+      title: "个人资料",
+      subtitle: "编辑你的信息",
       arrow: true,
     },
-    // 暂时隐藏的功能
-    // {
-    //   id: 2,
-    //   icon: "📱",
-    //   title: "账号设置",
-    //   subtitle: "账号安全设置",
-    //   arrow: true,
-    // },
-    // {
-    //   id: 3,
-    //   icon: "🔔",
-    //   title: "消息通知",
-    //   subtitle: "管理通知设置",
-    //   arrow: true,
-    // },
-    // {
-    //   id: 4,
-    //   icon: "❓",
-    //   title: "帮助与反馈",
-    //   subtitle: "常见问题",
-    //   arrow: true,
-    // },
-    // {
-    //   id: 5,
-    //   icon: "ℹ️",
-    //   title: "关于我们",
-    //   subtitle: "版本 1.0.0",
-    //   arrow: true,
-    // },
+    {
+      id: 2,
+      icon: "🧠",
+      title: "MBTI 设置",
+      subtitle: userInfo?.mbti || "设置你的人格类型",
+      arrow: true,
+    },
+    {
+      id: 3,
+      icon: "💭",
+      title: "关于 MBTI",
+      subtitle: "了解人格分类理论",
+      arrow: true,
+    },
   ];
 
   return (
@@ -76,92 +62,55 @@ const Profile = observer(() => {
             // 未登录状态
             <View className="not-login">
               <View className="avatar-placeholder">
-                <Text className="avatar-icon">👤</Text>
+                <Text className="avatar-icon">🌱</Text>
               </View>
-              <Text className="welcome-text">欢迎来到家长中心</Text>
-              <Text className="login-tip">登录后查看更多内容</Text>
+              <Text className="welcome-text">欢迎来到 INFP 世界</Text>
+              <Text className="login-tip">登录后开启你的专属空间</Text>
               <Button className="wechat-login-btn" onClick={handleWechatLogin}>
                 <Text className="wechat-icon">📱</Text>
-                <Text className="btn-text">微信授权登录</Text>
+                <Text className="btn-text">微信登录</Text>
               </Button>
             </View>
           ) : (
             // 已登录状态
             <View className="logged-in">
               <View className="user-header">
-                {userInfo?.avatar ? (
+                {userInfo?.avatarUrl ? (
                   <Image
                     className="user-avatar"
-                    src={userInfo.avatar}
+                    src={userInfo.avatarUrl}
                     mode="aspectFill"
                   />
                 ) : (
                   <View className="user-avatar-placeholder">
                     <Text className="avatar-text">
-                      {userInfo?.name?.charAt(0) || "用"}
+                      {userInfo?.nickName?.charAt(0) || "I"}
                     </Text>
                   </View>
                 )}
                 <View className="user-info">
-                  <Text className="user-nickname">{userInfo?.name || "家长"}</Text>
-                  {userInfo?.phone && (
-                    <Text className="user-phone">{userInfo.phone}</Text>
+                  <Text className="user-nickname">{userInfo?.nickName || "INFP 用户"}</Text>
+                  {userInfo?.mbti ? (
+                    <View
+                      className="mbti-badge"
+                      style={{
+                        background: getMbtiColors(userInfo.mbti).light,
+                        borderColor: getMbtiColors(userInfo.mbti).primary,
+                      }}
+                    >
+                      <Text className="mbti-emoji">{getMbtiEmoji(userInfo.mbti)}</Text>
+                      <Text
+                        className="mbti-text"
+                        style={{ color: getMbtiColors(userInfo.mbti).primary }}
+                      >
+                        {userInfo.mbti}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className="user-tag">未设置 MBTI</Text>
                   )}
                 </View>
               </View>
-
-              {/* 数据统计 */}
-              <View className="stats-section">
-                <View className="stat-item">
-                  <Text className="stat-value">{userInfo?.children?.length || 0}</Text>
-                  <Text className="stat-label">孩子</Text>
-                </View>
-                <View className="stat-divider" />
-                <View className="stat-item">
-                  <Text className="stat-value">0</Text>
-                  <Text className="stat-label">任务</Text>
-                </View>
-                <View className="stat-divider" />
-                <View className="stat-item">
-                  <Text className="stat-value">0</Text>
-                  <Text className="stat-label">星星</Text>
-                </View>
-              </View>
-
-              {/* 关联的孩子列表 */}
-              {userInfo?.children && userInfo.children.length > 0 && (
-                <View className="children-section">
-                  <Text className="children-title">我的孩子</Text>
-                  <View className="children-list">
-                    {userInfo.children.map((child: any) => (
-                      <View key={child._id || child.id} className="child-card">
-                        <View className="child-avatar-container">
-                          {child.avatar ? (
-                            <Image
-                              className="child-avatar"
-                              src={child.avatar}
-                              mode="aspectFill"
-                            />
-                          ) : (
-                            <View className="child-avatar-placeholder">
-                              <Text className="child-avatar-text">
-                                {child.name?.charAt(0) || "孩"}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                        <View className="child-info">
-                          <Text className="child-name">{child.name || "未命名"}</Text>
-                          <Text className="child-detail">
-                            {child.studentId && `学号: ${child.studentId}`}
-                            {child.class?.name && ` • ${child.class.name}`}
-                          </Text>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
             </View>
           )}
         </View>
@@ -173,7 +122,8 @@ const Profile = observer(() => {
               key={item.id}
               className="menu-item"
               onClick={() => {
-                if (!isLoggedIn && item.id <= 3) {
+                // 需要登录的功能
+                if (!isLoggedIn && (item.id === 1 || item.id === 2)) {
                   Taro.showToast({
                     title: "请先登录",
                     icon: "none",
@@ -181,24 +131,45 @@ const Profile = observer(() => {
                   return;
                 }
 
-                // 个人信息
+                // 个人资料
                 if (item.id === 1) {
                   Taro.navigateTo({ url: "/pages/profile-edit/index" });
                   return;
                 }
 
-                // 其他菜单项暂时显示提示
-                Taro.showToast({
-                  title: `${item.title}功能开发中`,
-                  icon: "none",
-                });
+                // MBTI 设置 - 直接跳转到设置页面
+                if (item.id === 2) {
+                  Taro.navigateTo({ url: "/pages/mbti-setting/index" });
+                  return;
+                }
+
+                // 关于 MBTI - 显示介绍弹窗
+                if (item.id === 3) {
+                  Taro.showModal({
+                    title: "关于 MBTI",
+                    content:
+                      "MBTI（迈尔斯-布里格斯类型指标）是一种人格分类理论，基于荣格的心理类型理论发展而来。\n\n它将人格分为16种类型，通过4个维度来描述：\n• 外向(E) vs 内向(I)\n• 感觉(S) vs 直觉(N)\n• 思考(T) vs 情感(F)\n• 判断(J) vs 知觉(P)\n\n每种类型都有独特的特质和优势，帮助你更好地认识自己和他人。",
+                    showCancel: false,
+                    confirmText: "了解了",
+                  });
+                  return;
+                }
               }}
             >
               <View className="menu-left">
                 <Text className="menu-icon">{item.icon}</Text>
                 <View className="menu-text">
                   <Text className="menu-title">{item.title}</Text>
-                  <Text className="menu-subtitle">{item.subtitle}</Text>
+                  <Text
+                    className="menu-subtitle"
+                    style={
+                      item.id === 2 && userInfo?.mbti
+                        ? { color: getMbtiColors(userInfo.mbti).primary }
+                        : {}
+                    }
+                  >
+                    {item.subtitle}
+                  </Text>
                 </View>
               </View>
               {item.arrow && <Text className="menu-arrow">›</Text>}

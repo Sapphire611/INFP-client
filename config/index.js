@@ -1,5 +1,9 @@
 const path = require("path");
 const { UnifiedWebpackPluginV5 } = require("weapp-tailwindcss/webpack");
+
+// 加载环境变量
+require("dotenv").config();
+
 const config = {
   projectName: "taro-template",
   date: "2021-4-25",
@@ -35,7 +39,9 @@ const config = {
     ["@tarojs/plugin-framework-react", { reactMode: "concurrent" }],
     "@tarojs/plugin-html",
   ],
-  defineConstants: {},
+  defineConstants: {
+    "process.env.CLOUD_ENV_ID": JSON.stringify(process.env.CLOUD_ENV_ID),
+  },
   copy: {
     patterns: [],
     options: {},
