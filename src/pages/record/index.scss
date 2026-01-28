@@ -1,0 +1,289 @@
+@import "../../app.scss";
+
+.record-page {
+  padding: 12px;
+  background: linear-gradient(180deg, #f0fdf4 0%, #f8fff9 100%);
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  .record-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 24px 16px 20px;
+    box-shadow: 0 8px 32px rgba(102, 187, 106, 0.12);
+    border: 1px solid rgba(102, 187, 106, 0.08);
+    max-width: 600px;
+    margin: 0 auto;
+    margin-top: 20px;
+  }
+
+  .header {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+      display: block;
+      letter-spacing: 0.5px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #9ca3af;
+      font-weight: 400;
+    }
+  }
+
+  .mood-selector {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .mood-item {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 8px;
+      border-radius: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: calc(20% - 4px);
+      position: relative;
+
+      &.active {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        transform: translateY(-4px);
+        .mood-icon {
+          transform: scale(1.15);
+        }
+        .mood-text {
+          color: #43a047;
+          font-weight: 600;
+        }
+      }
+
+      .mood-icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      }
+
+      .mood-text {
+        font-size: 12px;
+        color: #6b7280;
+        transition: all 0.3s ease;
+      }
+    }
+  }
+
+  .save-btn {
+    background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+    color: #fff;
+    border-radius: 20px;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(102, 187, 106, 0.3);
+    letter-spacing: 1px;
+    padding: 12px;
+
+    &::after {
+      border: none;
+    }
+
+    &:active {
+      opacity: 0.85;
+      transform: scale(0.96);
+    }
+  }
+
+  .login-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    border-radius: 20px;
+
+    .login-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    }
+
+    .login-text {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 24px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+      color: #fff;
+      border-radius: 20px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(102, 187, 106, 0.3);
+      letter-spacing: 1px;
+      padding: 12px 40px;
+      font-size: 16px;
+
+      &::after {
+        border: none;
+      }
+
+      &:active {
+        opacity: 0.85;
+        transform: scale(0.96);
+      }
+    }
+  }
+
+  .today-record {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #dcedc8 100%);
+    border-radius: 20px;
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .today-mood-icon {
+      font-size: 80px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+      animation: bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+      Text {
+        display: block;
+      }
+    }
+
+    .today-mood-label {
+      font-size: 20px;
+      color: #2e7d32;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .today-check {
+      font-size: 13px;
+      color: #558b2f;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+  }
+
+  .history-section {
+    margin-top: 28px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+
+    .history-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+      display: block;
+      padding-left: 10px;
+      border-left: 4px solid #66bb6a;
+      letter-spacing: 0.5px;
+    }
+
+    .record-list {
+      .record-item {
+        background: linear-gradient(135deg, #fff 0%, #f8fff9 100%);
+        padding: 20px 18px;
+        border-radius: 20px;
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 16px rgba(102, 187, 106, 0.08);
+        border: 1px solid rgba(102, 187, 106, 0.12);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:active {
+          transform: scale(0.98);
+          box-shadow: 0 2px 8px rgba(102, 187, 106, 0.1);
+        }
+
+        .record-info {
+          display: flex;
+          flex-direction: column;
+
+          .record-date {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 4px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+          }
+
+          .record-time {
+            font-size: 14px;
+            color: #9ca3af;
+          }
+        }
+
+        .record-mood {
+          display: flex;
+          align-items: center;
+          background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+          padding: 12px 20px;
+          border-radius: 24px;
+          box-shadow: 0 3px 10px rgba(102, 187, 106, 0.2);
+          transition: all 0.3s ease;
+
+          .mood-icon-small {
+            font-size: 32px;
+            margin-right: 10px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+          }
+
+          .mood-text-small {
+            font-size: 17px;
+            color: #43a047;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+          }
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 0;
+        color: #9ca3af;
+        font-size: 16px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}

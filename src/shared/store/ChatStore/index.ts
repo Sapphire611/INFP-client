@@ -16,16 +16,32 @@ interface ChatHistory {
   content: string;
 }
 
+// 今日心情类型
+interface TodayMood {
+  mood: string;
+  moodText: string;
+}
+
 const MESSAGES_KEY = "infp_chat_messages";
 
 class _ChatStore {
   messages: Message[] = [];
   isLoading = false;
   lastSendTime = 0; // 上次发送消息的时间戳
+  sessionId: string = ""; // 当前会话ID
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
     this.loadLocalMessages();
+    this.initSessionId();
+  }
+
+  /**
+   * 初始化会话ID
+   */
+  initSessionId() {
+    // 生成唯一的会话ID
+    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -119,16 +135,39 @@ class _ChatStore {
         mbti: AuthStore.userInfo?.mbti || null,
       };
 
-      // 调用云函数（设置 25 秒超时）
+      // 获取今日心情记录
+      let todayMood: TodayMood | null = null;
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const moodRes: any = await Taro.cloud.callFunction({
+          name: "mood",
+          data: {
+            type: "get",
+          },
+        });
+        if (moodRes.result && moodRes.result.success) {
+          const todayRecord = moodRes.result.data.find((r: any) => r.date === today);
+          if (todayRecord) {
+            todayMood = {
+              mood: todayRecord.mood,
+              moodText: todayRecord.moodText,
+            };
+          }
+        }
+      } catch (error) {
+        console.error("获取心情记录失败:", error);
+        // 获取心情失败不影响聊天，继续执行
+      }
+
+      // 调用云函数
       const res = await Taro.cloud.callFunction({
         name: "chat",
         data: {
           message: content,
           history: history.slice(0, -1), // 不包括刚添加的用户消息
           userProfile, // 携带用户信息
-        },
-        config: {
-          timeout: 25000, // 25秒超时
+          sessionId: this.sessionId, // 传递会话ID
+          todayMood, // 携带今日心情
         },
       });
 
@@ -165,6 +204,8 @@ class _ChatStore {
    */
   async clearMessages() {
     this.messages = [];
+    // 重新生成会话ID
+    this.initSessionId();
     try {
       await Taro.removeStorage({ key: MESSAGES_KEY });
     } catch (error) {

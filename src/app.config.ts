@@ -1,6 +1,7 @@
 export default {
   pages: [
     "pages/home/index",
+    "pages/record/index",
     "pages/profile/index",
     "pages/login/index",
     "pages/profile-edit/index",
@@ -22,6 +23,10 @@ export default {
       {
         pagePath: "pages/home/index",
         text: "首页"
+      },
+      {
+        pagePath: "pages/record/index",
+        text: "记录"
       },
       {
         pagePath: "pages/profile/index",

@@ -38,7 +38,7 @@ const Login = observer(() => {
           <View className="logo">
             <Text className="logo-emoji">🌱</Text>
           </View>
-          <Text className="logo-title">INFP的小剧场</Text>
+          <Text className="logo-title">INFP的生活日记</Text>
           <View className="logo-underline"></View>
         </View>
 

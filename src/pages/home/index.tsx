@@ -68,7 +68,7 @@ const Home = observer(() => {
       <View className="chat-header">
         <View className="header-content">
           <View className="header-text">
-            <Text className="header-title">INFP的小剧场</Text>
+            <Text className="header-title">INFP的生活日记</Text>
             <Text className="header-subtitle">做你自己就好</Text>
           </View>
           {ChatStore.messages.length > 0 && (

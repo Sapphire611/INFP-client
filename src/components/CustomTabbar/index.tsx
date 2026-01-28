@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Taro from "@tarojs/taro";
 import { Tabbar, TabbarItem } from "@nutui/nutui-react-taro";
-import { Message, User } from "@nutui/icons-react-taro";
+import { Message, User, Edit } from "@nutui/icons-react-taro";
 import "./index.scss";
 
 const CustomTabbar = () => {
@@ -16,8 +16,11 @@ const CustomTabbar = () => {
     if (route.includes("home")) {
       return 0;
     }
-    if (route.includes("profile")) {
+    if (route.includes("record")) {
       return 1;
+    }
+    if (route.includes("profile")) {
+      return 2;
     }
     return 0;
   };
@@ -52,6 +55,7 @@ const CustomTabbar = () => {
     // 页面路径映射
     const pathMap = [
       "/pages/home/index",
+      "/pages/record/index",
       "/pages/profile/index",
     ];
 
@@ -75,6 +79,7 @@ const CustomTabbar = () => {
       inactiveColor="#9e9e9e"
     >
       <TabbarItem title="聊天" icon={<Message size={20} />} />
+      <TabbarItem title="记录" icon={<Edit size={20} />} />
       <TabbarItem title="我的" icon={<User size={20} />} />
     </Tabbar>
   );

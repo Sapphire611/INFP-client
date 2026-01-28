@@ -64,7 +64,7 @@ const Profile = observer(() => {
               <View className="avatar-placeholder">
                 <Text className="avatar-icon">🌱</Text>
               </View>
-              <Text className="welcome-text">欢迎来到 INFP的小剧场</Text>
+              <Text className="welcome-text">欢迎来到 INFP的生活日记</Text>
               <Text className="login-tip">登录后开启你的专属空间</Text>
               <Button className="wechat-login-btn" onClick={handleWechatLogin}>
                 <Text className="wechat-icon">📱</Text>
