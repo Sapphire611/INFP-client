@@ -14,16 +14,57 @@ const ProfileEdit = observer(() => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * 选择头像
+   * 选择头像并上传到云存储
    */
-  const handleChooseAvatar = (e: any) => {
+  const handleChooseAvatar = async (e: any) => {
     const { avatarUrl: newAvatarUrl } = e.detail;
     if (newAvatarUrl) {
-      setAvatarUrl(newAvatarUrl);
-      Taro.showToast({
-        title: "头像已选择",
-        icon: "success",
-      });
+      try {
+        Taro.showLoading({
+          title: "上传头像中...",
+          mask: true,
+        });
+
+        // 上传头像到云存储
+        const uploadRes = await Taro.cloud.uploadFile({
+          cloudPath: `avatars/${Date.now()}_${Math.random().toString(36).substring(2, 11)}.jpg`,
+          filePath: newAvatarUrl,
+        });
+
+        console.log("上传头像到云存储成功:", uploadRes);
+
+        if (uploadRes.fileID) {
+          // 获取云存储图片的永久 URL
+          const urlRes = await Taro.cloud.getTempFileURL({
+            fileList: [uploadRes.fileID],
+          });
+
+          console.log("获取云存储 URL:", urlRes);
+
+          const permanentUrl = urlRes.fileList[0]?.tempFileURL;
+          if (permanentUrl) {
+            setAvatarUrl(permanentUrl);
+            Taro.showToast({
+              title: "头像已上传",
+              icon: "success",
+            });
+          } else {
+            throw new Error("获取头像 URL 失败");
+          }
+        } else {
+          throw new Error("上传头像失败");
+        }
+      } catch (error: any) {
+        console.error("上传头像失败:", error);
+        Taro.showToast({
+          title: error.message || "上传头像失败",
+          icon: "none",
+        });
+        // 如果上传失败，仍然使用临时路径，让用户可以重试
+        setAvatarUrl(newAvatarUrl);
+      } finally {
+        Taro.hideLoading();
+      }
     }
   };
 

@@ -8,6 +8,7 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
+  isStreaming?: boolean; // 是否正在流式显示中
 }
 
 // 对话历史（用于 API 调用）
@@ -41,7 +42,7 @@ class _ChatStore {
    */
   initSessionId() {
     // 生成唯一的会话ID
-    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -89,6 +90,66 @@ class _ChatStore {
     // 使用新数组替换，确保 MobX 能检测到变化
     this.messages = [...this.messages, message];
     this.saveMessages();
+  }
+
+  /**
+   * 添加流式消息（初始为空，然后逐步显示内容）
+   */
+  addStreamingMessage(role: "user" | "assistant"): Message {
+    const message: Message = {
+      id: `${Date.now()}_${Math.random()}`,
+      role,
+      content: "",
+      timestamp: Date.now(),
+      isStreaming: true,
+    };
+
+    this.messages = [...this.messages, message];
+    return message;
+  }
+
+  /**
+   * 更新流式消息内容
+   */
+  updateStreamingMessage(messageId: string, content: string) {
+    const messageIndex = this.messages.findIndex((msg) => msg.id === messageId);
+    if (messageIndex !== -1) {
+      this.messages[messageIndex].content = content;
+      // 触发 MobX 更新
+      this.messages = [...this.messages];
+    }
+  }
+
+  /**
+   * 完成流式消息
+   */
+  completeStreamingMessage(messageId: string) {
+    const messageIndex = this.messages.findIndex((msg) => msg.id === messageId);
+    if (messageIndex !== -1) {
+      this.messages[messageIndex].isStreaming = false;
+      this.messages = [...this.messages];
+      this.saveMessages();
+    }
+  }
+
+  /**
+   * 流式显示文本（打字机效果）
+   */
+  async streamText(messageId: string, fullText: string, speed: number = 30) {
+    const chars = fullText.split('');
+    let currentText = '';
+
+    for (let i = 0; i < chars.length; i++) {
+      currentText += chars[i];
+      this.updateStreamingMessage(messageId, currentText);
+
+      // 每3个字符暂停一次，让显示更自然
+      if (i % 3 === 0) {
+        await new Promise(resolve => setTimeout(resolve, speed));
+      }
+    }
+
+    this.completeStreamingMessage(messageId);
   }
 
   /**
@@ -159,8 +220,11 @@ class _ChatStore {
         // 获取心情失败不影响聊天，继续执行
       }
 
+      // 先添加一个空的流式消息，显示加载状态
+      const streamingMessage = this.addStreamingMessage("assistant");
+
       // 调用云函数
-      const res = await Taro.cloud.callFunction({
+      const res: any = await Taro.cloud.callFunction({
         name: "chat",
         data: {
           message: content,
@@ -172,14 +236,16 @@ class _ChatStore {
       });
 
       if (res.result && res.result.reply) {
-        // 添加 AI 回复
-        this.addMessage("assistant", res.result.reply);
+        // 使用打字机效果显示 AI 回复
+        await this.streamText(streamingMessage.id, res.result.reply, 20);
 
         // 如果使用的是降级回复，显示提示
         if (!res.result.success && res.result.error) {
           console.warn("使用降级回复:", res.result.error);
         }
       } else {
+        // 失败时移除流式消息
+        this.messages = this.messages.filter(msg => msg.id !== streamingMessage.id);
         throw new Error("获取回复失败");
       }
     } catch (error: any) {

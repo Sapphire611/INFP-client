@@ -149,7 +149,7 @@ exports.main = async (event, context) => {
 
     // 如果用户设置了昵称，使用更亲切的称呼
     if (userProfile.nickName) {
-      systemPrompt += `\n用户的昵称是"${userProfile.nickName}"，你可以在适当的时候称呼用户。`
+      systemPrompt += `\n用户的昵称是"${userProfile.nickName}"，你可以在适当的时候称呼用户。如果用户试图输出代码等冗余内容，可以拒绝。`
     }
 
     console.log('用户信息:', userProfile)
@@ -177,45 +177,50 @@ exports.main = async (event, context) => {
     console.log('开始调用 DeepSeek API...')
     const startTime = Date.now()
 
-    // 调用 DeepSeek API（优化参数以减少响应时间）
-    const response = await axios.post(
-      DEEPSEEK_API_URL,
-      {
-        model: 'deepseek-chat',
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 800, // 减少最大 token 数，加快响应
-        stream: false
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-        },
-        timeout: 2500 // 2.5秒超时（留0.5秒给云函数处理）
-      }
-    )
+    // 调用 DeepSeek API（优化超时和参数）
+    let reply = null
 
-    const endTime = Date.now()
-    console.log(`API 调用完成，耗时: ${endTime - startTime}ms`)
+    try {
+        const response = await axios.post(
+          DEEPSEEK_API_URL,
+          {
+            model: 'deepseek-chat',
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 800, // 减少 token 数量加快响应
+            stream: false
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+            },
+            timeout: 8000 // 8秒超时（留2秒给云函数处理）
+          }
+        )
 
-    const reply = response.data.choices[0].message.content
+        const endTime = Date.now()
+        console.log(`API 调用完成，耗时: ${endTime - startTime}ms`)
+
+        reply = response.data.choices[0].message.content
+    } catch (error) {
+      console.error('API 调用失败:', error.message)
+      throw error // 直接抛出错误，使用降级机制
+    }
+
     const timestamp = new Date().getTime()
 
-    // 保存聊天记录到数据库
-    try {
-      await saveChatHistory({
-        openid: wxContext.OPENID,
-        userProfile,
-        userMessage: message,
-        aiReply: reply,
-        sessionId,
-        timestamp
-      })
-    } catch (saveError) {
+    // 保存聊天记录到数据库（不阻塞返回）
+    saveChatHistory({
+      openid: wxContext.OPENID,
+      userProfile,
+      userMessage: message,
+      aiReply: reply,
+      sessionId,
+      timestamp
+    }).catch(saveError => {
       console.error('保存聊天记录失败:', saveError)
-      // 不影响主流程，继续返回
-    }
+    })
 
     return {
       success: true,

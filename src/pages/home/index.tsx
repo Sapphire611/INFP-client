@@ -102,7 +102,7 @@ const Home = observer(() => {
           <View
             key={msg.id}
             id={`msg-${msg.id}`}
-            className={`message-item ${msg.role}`}
+            className={`message-item ${msg.role} ${msg.isStreaming ? 'streaming' : ''}`}
           >
             {msg.role === "assistant" && (
               <View className="avatar ai-avatar">
@@ -112,7 +112,11 @@ const Home = observer(() => {
 
             <View className="message-content">
               <View className="message-bubble">
-                <Text className="message-text">{msg.content}</Text>
+                {msg.isStreaming && msg.content === '' ? (
+                  <Text className="loading-dots">思考中...</Text>
+                ) : (
+                  <Text className="message-text">{msg.content}</Text>
+                )}
               </View>
               <Text className="message-time">{formatTime(msg.timestamp)}</Text>
             </View>
@@ -134,19 +138,6 @@ const Home = observer(() => {
             )}
           </View>
         ))}
-
-        {ChatStore.isLoading && (
-          <View className="message-item assistant">
-            <View className="avatar ai-avatar">
-              <Text className="avatar-emoji">🌱</Text>
-            </View>
-            <View className="message-content">
-              <View className="message-bubble loading">
-                <Text className="loading-dots">思考中...</Text>
-              </View>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* 输入区域 */}
