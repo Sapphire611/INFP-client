@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import Taro from "@tarojs/taro";
 import { AuthStore } from "@shared/store";
 import { getMbtiColors, getMbtiEmoji } from "@shared/utils";
+import { supabase } from "@shared/utils/supabase";
 import "./index.scss";
 
 // MBTI 类型定义
@@ -32,7 +33,7 @@ const MbtiSetting = observer(() => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * 保存 MBTI 设置
+   * 保存 MBTI 设置（直接使用 Supabase 数据库）
    */
   const handleSave = async () => {
     if (!selectedMbti) {
@@ -43,53 +44,56 @@ const MbtiSetting = observer(() => {
       return;
     }
 
+    if (!AuthStore.userInfo?.openid) {
+      Taro.showToast({
+        title: "用户未登录",
+        icon: "none",
+      });
+      return;
+    }
+
     console.log("准备保存 MBTI，当前选择:", selectedMbti);
-    console.log("当前用户信息:", userInfo);
+    console.log("当前用户信息:", AuthStore.userInfo);
 
     try {
       setIsSubmitting(true);
 
-      // 调用云函数更新 MBTI
-      const res = await Taro.cloud.callFunction({
-        name: "updateProfile",
-        data: {
+      const openid = AuthStore.userInfo.openid;
+
+      // 直接调用 Supabase 数据库更新 MBTI
+      const { data, error } = await supabase
+        .from("wechat_users")
+        .update({
           mbti: selectedMbti,
-        },
+          last_login_at: new Date().toISOString(),
+        })
+        .eq("openid", openid)
+        .select()
+        .single();
+
+      console.log("数据库更新结果:", data, error);
+
+      if (error) {
+        throw new Error(error.message || "更新失败");
+      }
+
+      // 更新本地存储的用户信息
+      await AuthStore.saveUserInfo({
+        ...AuthStore.userInfo,
+        mbti: selectedMbti,
       });
 
-      console.log("云函数调用结果:", res);
+      console.log("保存到本地成功，当前 AuthStore.userInfo:", AuthStore.userInfo);
 
-      // 类型安全检查
-      const result = res.result as any;
-      console.log("返回的 userInfo:", result?.userInfo);
+      Taro.showToast({
+        title: "保存成功",
+        icon: "success",
+      });
 
-      if (result && typeof result === 'object' && result.success) {
-        // 使用云函数返回的最新用户信息，合并到本地信息中
-        const updatedUserInfo = result.userInfo;
-        console.log("准备保存到本地的用户信息:", updatedUserInfo);
-
-        await AuthStore.saveUserInfo({
-          ...userInfo,
-          ...updatedUserInfo,
-        });
-
-        console.log("保存到本地成功，当前 AuthStore.userInfo:", AuthStore.userInfo);
-
-        Taro.showToast({
-          title: "保存成功",
-          icon: "success",
-        });
-
-        // 延迟返回上一页
-        setTimeout(() => {
-          Taro.navigateBack();
-        }, 1500);
-      } else {
-        const errorMsg = (result && typeof result === 'object' && result.error)
-          ? result.error
-          : "更新失败";
-        throw new Error(errorMsg);
-      }
+      // 延迟返回上一页
+      setTimeout(() => {
+        Taro.navigateBack();
+      }, 1500);
     } catch (error: any) {
       console.error("保存失败:", error);
       Taro.showToast({

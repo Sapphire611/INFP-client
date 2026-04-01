@@ -3,12 +3,6 @@
 @import "./mixin/hr.scss"; // 添加分割线  参数：位置,间隔
 @import "./mixin/price-before.scss"; // 价格前加¥
 
-/*每个页面公共css */
-page {
-  min-height: 100%;
-  background-color: #f7f7f7;
-}
-
 /* x水平排列*/
 .x-f {
   display: flex;

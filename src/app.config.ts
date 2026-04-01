@@ -25,10 +25,6 @@ export default {
         text: "首页"
       },
       {
-        pagePath: "pages/record/index",
-        text: "记录"
-      },
-      {
         pagePath: "pages/profile/index",
         text: "我的"
       }

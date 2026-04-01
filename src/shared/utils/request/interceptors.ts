@@ -6,8 +6,12 @@ import { ECode, IApiData } from "./interface";
 export default function (chain) {
   const requestParams = chain.requestParams;
   const { url } = requestParams;
+
+  // 跳过 Supabase 请求的拦截器处理
+  const isSupabaseRequest = url && url.includes('supabase.co');
+
   const isNeedSetToken = !(url && url.includes("login"));
-  if (isNeedSetToken && GlobalStore.token) {
+  if (isNeedSetToken && GlobalStore.token && !isSupabaseRequest) {
     requestParams.header = {
       ...requestParams.header,
       Authorization: `Bearer ${GlobalStore.token}`,
@@ -17,6 +21,10 @@ export default function (chain) {
   return chain
     .proceed(requestParams)
     .then(async (res) => {
+      // Supabase 请求直接返回，不检查响应格式
+      if (isSupabaseRequest) {
+        return res;
+      }
       return await checkResponse(res.data);
     })
     .catch((err) => {

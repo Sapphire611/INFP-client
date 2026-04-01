@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import { View } from "@tarojs/components";
 import Taro from "@tarojs/taro";
 import { Tabbar, TabbarItem } from "@nutui/nutui-react-taro";
-import { Message, User, Edit } from "@nutui/icons-react-taro";
+import { Message, User } from "@nutui/icons-react-taro";
 import "./index.scss";
 
 const CustomTabbar = () => {
@@ -16,11 +17,8 @@ const CustomTabbar = () => {
     if (route.includes("home")) {
       return 0;
     }
-    if (route.includes("record")) {
-      return 1;
-    }
     if (route.includes("profile")) {
-      return 2;
+      return 1;
     }
     return 0;
   };
@@ -55,7 +53,6 @@ const CustomTabbar = () => {
     // 页面路径映射
     const pathMap = [
       "/pages/home/index",
-      "/pages/record/index",
       "/pages/profile/index",
     ];
 
@@ -72,16 +69,18 @@ const CustomTabbar = () => {
   };
 
   return (
-    <Tabbar
-      value={active}
-      onSwitch={handleSwitch}
-      activeColor="#66bb6a"
-      inactiveColor="#9e9e9e"
-    >
-      <TabbarItem title="聊天" icon={<Message size={20} />} />
-      <TabbarItem title="记录" icon={<Edit size={20} />} />
-      <TabbarItem title="我的" icon={<User size={20} />} />
-    </Tabbar>
+    <View className="infp-tabbar">
+      <Tabbar
+        value={active}
+        onSwitch={handleSwitch}
+        activeColor="#66bb6a"
+        inactiveColor="#9e9e9e"
+        className="infp-tabbar-list"
+      >
+        <TabbarItem title="聊天" icon={<Message size={20} />} className="infp-tabbar-item" />
+        <TabbarItem title="我的" icon={<User size={20} />} className="infp-tabbar-item" />
+      </Tabbar>
+    </View>
   );
 };
 

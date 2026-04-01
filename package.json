@@ -1,7 +1,7 @@
 {
-  "name": "taro-template-3.0",
+  "name": "infp-client",
   "version": "1.0.4",
-  "description": "taro-template-3.0",
+  "description": "infp-client",
   "templateInfo": {
     "name": "default",
     "typescript": true,
@@ -29,10 +29,6 @@
     "test": "jest --config jest.config.js --no-cache",
     "postinstall": "weapp-tw patch",
     "dev": "npm run build:weapp -- --watch"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/shenpvip/taro-template.git"
   },
   "keywords": [
     "taro3",

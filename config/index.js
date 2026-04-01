@@ -2,7 +2,13 @@ const path = require("path");
 const { UnifiedWebpackPluginV5 } = require("weapp-tailwindcss/webpack");
 
 // 加载环境变量
-require("dotenv").config();
+const envFile = process.env.NODE_ENV === 'development' ? '.env.development' : '.env.production'
+require("dotenv").config({ path: path.resolve(__dirname, '..', envFile) })
+
+console.log('🔧 加载环境变量文件:', envFile)
+console.log('  - SUPABASE_URL:', process.env.SUPABASE_URL ? '✅' : '❌')
+console.log('  - SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? '✅' : '❌')
+console.log('  - APP_NUMBER:', process.env.APP_NUMBER)
 
 const config = {
   projectName: "taro-template",
@@ -31,7 +37,7 @@ const config = {
   },
   // 持久化缓存配置
   cache: {
-    enable: false,
+    enable: true,
   },
   sourceRoot: "src",
   outputRoot: "dist",
@@ -39,13 +45,6 @@ const config = {
     ["@tarojs/plugin-framework-react", { reactMode: "concurrent" }],
     "@tarojs/plugin-html",
   ],
-  defineConstants: {
-    "process.env.CLOUD_ENV_ID": JSON.stringify(process.env.CLOUD_ENV_ID),
-  },
-  copy: {
-    patterns: [],
-    options: {},
-  },
   framework: "react",
   mini: {
     postcss: {

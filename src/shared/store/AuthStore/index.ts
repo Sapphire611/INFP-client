@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx";
 import Taro from "@tarojs/taro";
 import { ChatStore } from "../ChatStore";
+import { supabase, getAppNumber } from "@shared/utils/supabase";
 
 // 微信用户信息接口
 export interface WechatUserInfo {
@@ -52,31 +53,42 @@ class _AuthStore {
   }
 
   /**
-   * 微信登录（使用云函数）
+   * 微信登录（使用 Supabase Edge Function）
    */
   async wechatLogin(nickName?: string, avatarUrl?: string) {
     try {
       this.isLoading = true;
 
-      // 调用云函数登录
-      // 如果提供了昵称和头像，则传递给云函数
-      const data: any = {};
-      if (nickName) {
-        data.nickName = nickName;
-      }
-      if (avatarUrl) {
-        data.avatarUrl = avatarUrl;
-      }
-
-      const res = await Taro.cloud.callFunction({
-        name: "login",
-        data,
+      // 获取微信登录 code
+      const loginResult = await new Promise<{ code?: string; errMsg: string }>((resolve) => {
+        Taro.login({
+          success: (res) => resolve({ code: res.code, errMsg: res.errMsg }),
+          fail: (err) => resolve({ errMsg: err.errMsg }),
+        });
       });
 
-      console.log("云函数登录结果:", res);
+      if (!loginResult.code) {
+        throw new Error("获取登录凭证失败");
+      }
 
-      if (res.result && res.result.success) {
-        const { userInfo } = res.result;
+      // 调用 Supabase Edge Function 进行微信登录
+      const { data, error } = await supabase.functions.invoke("wechat-login", {
+        body: {
+          code: loginResult.code,
+          nickName: nickName,
+          avatarUrl: avatarUrl,
+          appNumber: getAppNumber(),
+        },
+      });
+
+      console.log("Supabase Edge Function 登录结果:", data, error);
+
+      if (error) {
+        throw new Error(error.message || "登录失败");
+      }
+
+      if (data && data.success) {
+        const { userInfo } = data;
 
         // 保存用户信息
         const wechatUserInfo: WechatUserInfo = {
@@ -98,7 +110,7 @@ class _AuthStore {
 
         return true;
       } else {
-        throw new Error(res.result?.error || "登录失败");
+        throw new Error(data?.error || "登录失败");
       }
     } catch (error: any) {
       console.error("微信登录失败:", error);

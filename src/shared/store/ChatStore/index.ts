@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx";
 import Taro from "@tarojs/taro";
 import { AuthStore } from "../AuthStore";
+import { supabase } from "@shared/utils/supabase";
 
 // 消息类型
 export interface Message {
@@ -199,15 +200,16 @@ class _ChatStore {
       // 获取今日心情记录
       let todayMood: TodayMood | null = null;
       try {
-        const today = new Date().toISOString().split("T")[0];
-        const moodRes: any = await Taro.cloud.callFunction({
-          name: "mood",
-          data: {
+        const { data: moodData, error: moodError } = await supabase.functions.invoke("mood", {
+          body: {
             type: "get",
+            openid: AuthStore.userInfo?.openid,
           },
         });
-        if (moodRes.result && moodRes.result.success) {
-          const todayRecord = moodRes.result.data.find((r: any) => r.date === today);
+
+        if (!moodError && moodData && moodData.success) {
+          const today = new Date().toISOString().split("T")[0];
+          const todayRecord = moodData.data.find((r: any) => r.date === today);
           if (todayRecord) {
             todayMood = {
               mood: todayRecord.mood,
@@ -223,26 +225,30 @@ class _ChatStore {
       // 先添加一个空的流式消息，显示加载状态
       const streamingMessage = this.addStreamingMessage("assistant");
 
-      // 调用云函数
-      const res: any = await Taro.cloud.callFunction({
-        name: "chat",
-        data: {
+      // 调用 Supabase Edge Function
+      const res: any = await supabase.functions.invoke("chat", {
+        body: {
           message: content,
           history: history.slice(0, -1), // 不包括刚添加的用户消息
           userProfile, // 携带用户信息
           sessionId: this.sessionId, // 传递会话ID
           todayMood, // 携带今日心情
+          openid: AuthStore.userInfo?.openid, // 传递 openid 用于保存聊天记录
         },
       });
 
-      if (res.result && res.result.reply) {
+      if (res.data && res.data.reply) {
         // 使用打字机效果显示 AI 回复
-        await this.streamText(streamingMessage.id, res.result.reply, 20);
+        await this.streamText(streamingMessage.id, res.data.reply, 20);
 
         // 如果使用的是降级回复，显示提示
-        if (!res.result.success && res.result.error) {
-          console.warn("使用降级回复:", res.result.error);
+        if (!res.data.success && res.data.error) {
+          console.warn("使用降级回复:", res.data.error);
         }
+      } else if (res.error) {
+        // Edge Function 调用失败
+        this.messages = this.messages.filter(msg => msg.id !== streamingMessage.id);
+        throw new Error(res.error.message || "获取回复失败");
       } else {
         // 失败时移除流式消息
         this.messages = this.messages.filter(msg => msg.id !== streamingMessage.id);

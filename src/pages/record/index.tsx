@@ -3,6 +3,7 @@ import Taro, { useDidShow } from "@tarojs/taro";
 import { useState, useEffect } from "react";
 import { AuthStore } from "@shared/store"; // Assuming this exists based on Home page
 import { observer } from "mobx-react";
+import { supabase } from "@shared/utils/supabase";
 import "./index.scss";
 
 const moodOptions = [
@@ -20,28 +21,39 @@ const RecordPage = observer(() => {
   const [todayRecord, setTodayRecord] = useState<any>(null);
 
   const fetchRecords = async () => {
-    if (!AuthStore.isLoggedIn) return;
+    if (!AuthStore.isLoggedIn || !AuthStore.userInfo?.openid) return;
 
     try {
       setLoading(true);
-      const res: any = await Taro.cloud.callFunction({
-        name: "mood",
-        data: {
-          type: "get",
-        },
-      });
+      const openid = AuthStore.userInfo.openid;
 
-      if (res.result && res.result.success) {
-        const today = new Date().toISOString().split("T")[0];
-        const todayRec = res.result.data.find((r: any) => r.date === today);
-        const otherRecords = res.result.data.filter((r: any) => r.date !== today);
+      // 直接调用 Supabase 数据库获取记录
+      // 获取最近1个月的记录
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
 
-        setTodayRecord(todayRec);
-        setRecords(otherRecords);
+      const { data, error } = await supabase
+        .from("mood_records")
+        .select("*")
+        .eq("openid", openid)
+        .gte("date", thirtyDaysAgoStr);
 
-        if (todayRec) {
-          setSelectedMood(todayRec.mood);
-        }
+      if (error) {
+        console.error("获取记录失败:", error);
+        Taro.showToast({ title: "加载失败", icon: "none" });
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const todayRec = (data || []).find((r: any) => r.date === today);
+      const otherRecords = (data || []).filter((r: any) => r.date !== today);
+
+      setTodayRecord(todayRec);
+      setRecords(otherRecords || []);
+
+      if (todayRec) {
+        setSelectedMood(todayRec.mood);
       }
     } catch (err) {
       console.error("Failed to fetch records", err);
@@ -94,34 +106,37 @@ const RecordPage = observer(() => {
     try {
       Taro.showLoading({ title: "保存中..." });
       const today = new Date().toISOString().split("T")[0];
+      const openid = AuthStore.userInfo?.openid;
 
       console.log('准备保存:', { mood: selectedMood, moodText: moodObj.label, date: today });
 
-      const res: any = await Taro.cloud.callFunction({
-        name: "mood",
-        data: {
-          type: "add",
-          data: {
-            mood: selectedMood,
-            moodText: moodObj.label,
-            date: today,
-          },
-        },
-      });
+      // 直接调用 Supabase 数据库插入记录
+      const { data, error } = await supabase
+        .from("mood_records")
+        .insert({
+          openid: openid,
+          mood: selectedMood,
+          mood_text: moodObj.label,
+          date: today,
+        });
 
-      console.log('云函数返回:', res);
+      console.log('数据库返回:', data, error);
 
       Taro.hideLoading();
 
-      if (res.result && res.result.success) {
-        Taro.showToast({ title: "记录成功", icon: "success" });
-        fetchRecords(); // Refresh list
-      } else if (res.result && res.result.alreadyExists) {
-        Taro.showToast({ title: "今日已记录过心情啦", icon: "none" });
-      } else {
-        console.error('保存失败:', res);
-        Taro.showToast({ title: "保存失败: " + (res.result?.errMsg || "未知错误"), icon: "none" });
+      if (error) {
+        // 检查是否是唯一约束错误（即今日已记录）
+        if (error.code === '23505' || error.message?.includes('duplicate')) {
+          Taro.showToast({ title: "今日已记录过心情啦", icon: "none" });
+        } else {
+          console.error('保存失败:', error);
+          Taro.showToast({ title: "保存失败: " + (error.message || "未知错误"), icon: "none" });
+        }
+        return;
       }
+
+      Taro.showToast({ title: "记录成功", icon: "success" });
+      fetchRecords(); // Refresh list
 
     } catch (err) {
       Taro.hideLoading();
@@ -190,9 +205,9 @@ const RecordPage = observer(() => {
             </View>
           ) : records.length > 0 ? (
             records.map((record) => {
-                const moodInfo = moodOptions.find(m => m.value === record.mood) || { icon: '❓', label: record.moodText || '未知' };
+                const moodInfo = moodOptions.find(m => m.value === record.mood) || { icon: '❓', label: record.mood_text || '未知' };
                 return (
-                    <View key={record._id} className="record-item">
+                    <View key={record.id} className="record-item">
                         <View className="record-info">
                         <Text className="record-date">{formatDate(record.date)}</Text>
                         </View>
