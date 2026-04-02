@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls)",
+      "Bash(pnpm install)",
+      "Bash(npm run build:weapp)",
+      "Bash(npm run dev:weapp)",
+      "Bash(npm run build:h5)",
+      "Glob",
+      "Grep",
+      "Read",
+      "Write",
+      "Edit"
+    ],
+    "deny": [
+      "Bash(rm -rf node_modules)",
+      "Bash(rm -rf .git)"
+    ]
+  },
+  "goals": {
+    "default": "帮助开发 INFP 的生活日记微信小程序项目"
+  },
+  "env": {
+    "projectType": "taro-weapp"
+  }
+}

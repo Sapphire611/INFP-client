@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import Taro from "@tarojs/taro";
 import { AuthStore } from "../AuthStore";
 import { supabase } from "@shared/utils/supabase";
@@ -9,7 +9,7 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
-  isStreaming?: boolean; // 是否正在流式显示中
+  isStreaming?: boolean;
 }
 
 // 对话历史（用于 API 调用）
@@ -29,21 +29,20 @@ const MESSAGES_KEY = "infp_chat_messages";
 class _ChatStore {
   messages: Message[] = [];
   isLoading = false;
-  lastSendTime = 0; // 上次发送消息的时间戳
-  sessionId: string = ""; // 当前会话ID
+  lastSendTime = 0;
+  conversationId: string = "";
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
     this.loadLocalMessages();
-    this.initSessionId();
+    this.initConversationId();
   }
 
   /**
-   * 初始化会话ID
+   * 初始化会话 ID（每次冷启动生成新 ID）
    */
-  initSessionId() {
-    // 生成唯一的会话ID
-    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  initConversationId() {
+    this.conversationId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -87,14 +86,12 @@ class _ChatStore {
       content,
       timestamp: Date.now(),
     };
-
-    // 使用新数组替换，确保 MobX 能检测到变化
     this.messages = [...this.messages, message];
     this.saveMessages();
   }
 
   /**
-   * 添加流式消息（初始为空，然后逐步显示内容）
+   * 添加流式消息占位
    */
   addStreamingMessage(role: "user" | "assistant"): Message {
     const message: Message = {
@@ -104,7 +101,6 @@ class _ChatStore {
       timestamp: Date.now(),
       isStreaming: true,
     };
-
     this.messages = [...this.messages, message];
     return message;
   }
@@ -113,10 +109,9 @@ class _ChatStore {
    * 更新流式消息内容
    */
   updateStreamingMessage(messageId: string, content: string) {
-    const messageIndex = this.messages.findIndex((msg) => msg.id === messageId);
-    if (messageIndex !== -1) {
-      this.messages[messageIndex].content = content;
-      // 触发 MobX 更新
+    const idx = this.messages.findIndex((msg) => msg.id === messageId);
+    if (idx !== -1) {
+      this.messages[idx].content = content;
       this.messages = [...this.messages];
     }
   }
@@ -125,159 +120,200 @@ class _ChatStore {
    * 完成流式消息
    */
   completeStreamingMessage(messageId: string) {
-    const messageIndex = this.messages.findIndex((msg) => msg.id === messageId);
-    if (messageIndex !== -1) {
-      this.messages[messageIndex].isStreaming = false;
+    const idx = this.messages.findIndex((msg) => msg.id === messageId);
+    if (idx !== -1) {
+      this.messages[idx].isStreaming = false;
       this.messages = [...this.messages];
       this.saveMessages();
     }
   }
 
   /**
-   * 流式显示文本（打字机效果）
+   * 打字机效果显示文本
    */
   async streamText(messageId: string, fullText: string, speed: number = 30) {
-    const chars = fullText.split('');
-    let currentText = '';
-
+    const chars = fullText.split("");
+    let currentText = "";
     for (let i = 0; i < chars.length; i++) {
       currentText += chars[i];
       this.updateStreamingMessage(messageId, currentText);
-
-      // 每3个字符暂停一次，让显示更自然
       if (i % 3 === 0) {
-        await new Promise(resolve => setTimeout(resolve, speed));
+        await new Promise((resolve) => setTimeout(resolve, speed));
       }
     }
-
     this.completeStreamingMessage(messageId);
   }
 
+  // ============================================================
+  // conversations 表操作（直接调 Supabase REST API）
+  // ============================================================
+
   /**
-   * 发送消息并获取回复
+   * 在 Supabase 创建或更新会话记录
+   * 使用 upsert 语义（INSERT ... ON CONFLICT DO NOTHING）：首次插入，已存在则忽略
    */
-  async sendMessage(content: string) {
-    if (!content.trim()) {
-      return;
-    }
+  async ensureConversation(firstMessage: string) {
+    const openid = AuthStore.userInfo?.openid;
+    if (!openid) return;
 
-    // 检查发送频率限制（5秒内只能发送一次）
-    const now = Date.now();
-    const timeSinceLastSend = now - this.lastSendTime;
-    const MIN_INTERVAL = 5000; // 5秒
+    const title = firstMessage.slice(0, 20) + (firstMessage.length > 20 ? "..." : "");
 
-    if (timeSinceLastSend < MIN_INTERVAL) {
-      const remainingTime = Math.ceil((MIN_INTERVAL - timeSinceLastSend) / 1000);
-      Taro.showToast({
-        title: `请等待 ${remainingTime} 秒后再发送`,
-        icon: "none",
-        duration: 2000,
+    // 先查是否存在（只用 id 一个 eq，规避自定义客户端链式限制）
+    const { data } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("id", this.conversationId)
+      .single();
+
+    if (!data) {
+      // 创建新会话
+      await supabase.from("conversations").insert({
+        id: this.conversationId,
+        user_id: openid,
+        title,
+        model: "deepseek-chat",
       });
+    } else {
+      // 已存在则更新时间戳
+      await supabase
+        .from("conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", this.conversationId);
+    }
+  }
+
+  /**
+   * 获取最新摘要，用于注入对话上下文
+   * 自定义客户端不支持 order()，直接用 REST API 查询参数
+   */
+  async getLatestSummary(): Promise<string | null> {
+    try {
+      const { data } = await supabase
+        .from("conversation_summaries")
+        .select("summary_text")
+        .eq("conversation_id", this.conversationId)
+        .single();
+
+      return (data as any)?.summary_text ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  // ============================================================
+  // 发送消息
+  // ============================================================
+
+  async sendMessage(content: string) {
+    if (!content.trim()) return;
+
+    // 发送频率限制（5秒）
+    const now = Date.now();
+    const MIN_INTERVAL = 5000;
+    if (now - this.lastSendTime < MIN_INTERVAL) {
+      const remaining = Math.ceil((MIN_INTERVAL - (now - this.lastSendTime)) / 1000);
+      Taro.showToast({ title: `请等待 ${remaining} 秒后再发送`, icon: "none", duration: 2000 });
       return;
     }
 
     try {
       this.isLoading = true;
-      this.lastSendTime = now; // 更新最后发送时间
+      this.lastSendTime = now;
 
-      // 添加用户消息
+      // 1. 显示用户消息
       this.addMessage("user", content);
 
-      // 构建对话历史（最近10条）
-      const history: ChatHistory[] = this.messages
-        .slice(-10)
-        .map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        }));
-
-      // 获取用户信息
-      const userProfile = {
-        nickName: AuthStore.userInfo?.nickName || null,
-        mbti: AuthStore.userInfo?.mbti || null,
-      };
-
-      // 获取今日心情记录
-      let todayMood: TodayMood | null = null;
-      try {
-        const { data: moodData, error: moodError } = await supabase.functions.invoke("mood", {
-          body: {
-            type: "get",
-            openid: AuthStore.userInfo?.openid,
-          },
-        });
-
-        if (!moodError && moodData && moodData.success) {
-          const today = new Date().toISOString().split("T")[0];
-          const todayRecord = moodData.data.find((r: any) => r.date === today);
-          if (todayRecord) {
-            todayMood = {
-              mood: todayRecord.mood,
-              moodText: todayRecord.moodText,
-            };
-          }
-        }
-      } catch (error) {
-        console.error("获取心情记录失败:", error);
-        // 获取心情失败不影响聊天，继续执行
+      // 2. 确保 Supabase conversations 记录存在
+      if (AuthStore.userInfo?.openid) {
+        this.ensureConversation(content).catch((e) =>
+          console.error("ensureConversation failed:", e)
+        );
       }
 
-      // 先添加一个空的流式消息，显示加载状态
+      // 3. 获取会话摘要（历史消息为空时注入摘要作为上下文）
+      const localHistory = this.messages.slice(-10);
+      let history: ChatHistory[] = localHistory
+        .slice(0, -1) // 不包含刚加的用户消息
+        .map((msg) => ({ role: msg.role, content: msg.content }));
+
+      if (localHistory.length <= 2 && AuthStore.userInfo?.openid) {
+        const summary = await this.getLatestSummary();
+        if (summary) {
+          history = [
+            { role: "assistant", content: `[历史对话摘要]: ${summary}` },
+            ...history,
+          ];
+        }
+      }
+
+      // 4. 获取今日心情（暂时注释，mood Edge Function 未部署）
+      let todayMood: TodayMood | null = null;
+      // try {
+      //   const { data: moodData } = await supabase.functions.invoke("mood", {
+      //     body: { type: "get", openid: AuthStore.userInfo?.openid },
+      //   });
+      //   if (moodData?.success) {
+      //     const today = new Date().toISOString().split("T")[0];
+      //     const todayRecord = moodData.data?.find((r: any) => r.date === today);
+      //     if (todayRecord) {
+      //       todayMood = { mood: todayRecord.mood, moodText: todayRecord.moodText };
+      //     }
+      //   }
+      // } catch {
+      //   // 心情获取失败不影响聊天
+      // }
+
+      // 5. 添加流式占位消息
       const streamingMessage = this.addStreamingMessage("assistant");
 
-      // 调用 Supabase Edge Function
+      // 6. 调用 chat Edge Function
       const res: any = await supabase.functions.invoke("chat", {
         body: {
           message: content,
-          history: history.slice(0, -1), // 不包括刚添加的用户消息
-          userProfile, // 携带用户信息
-          sessionId: this.sessionId, // 传递会话ID
-          todayMood, // 携带今日心情
-          openid: AuthStore.userInfo?.openid, // 传递 openid 用于保存聊天记录
+          history,
+          userProfile: {
+            nickName: AuthStore.userInfo?.nickName || null,
+            mbti: AuthStore.userInfo?.mbti || null,
+          },
+          conversationId: this.conversationId,
+          todayMood,
+          openid: AuthStore.userInfo?.openid,
         },
       });
 
-      if (res.data && res.data.reply) {
-        // 使用打字机效果显示 AI 回复
+      if (res.data?.reply) {
         await this.streamText(streamingMessage.id, res.data.reply, 20);
-
-        // 如果使用的是降级回复，显示提示
         if (!res.data.success && res.data.error) {
           console.warn("使用降级回复:", res.data.error);
         }
       } else if (res.error) {
-        // Edge Function 调用失败
-        this.messages = this.messages.filter(msg => msg.id !== streamingMessage.id);
+        runInAction(() => {
+          this.messages = this.messages.filter((msg) => msg.id !== streamingMessage.id);
+        });
         throw new Error(res.error.message || "获取回复失败");
       } else {
-        // 失败时移除流式消息
-        this.messages = this.messages.filter(msg => msg.id !== streamingMessage.id);
+        runInAction(() => {
+          this.messages = this.messages.filter((msg) => msg.id !== streamingMessage.id);
+        });
         throw new Error("获取回复失败");
       }
     } catch (error: any) {
       console.error("发送消息失败:", error);
-      Taro.showToast({
-        title: "发送失败，请重试",
-        icon: "none",
-      });
-
-      // 添加错误提示消息
-      this.addMessage(
-        "assistant",
-        "抱歉，我现在无法回复。请稍后再试。"
-      );
+      Taro.showToast({ title: "发送失败，请重试", icon: "none" });
+      this.addMessage("assistant", "抱歉，我现在无法回复。请稍后再试。");
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 
   /**
-   * 清空对话
+   * 清空对话（重置本地消息 + 生成新会话 ID）
    */
   async clearMessages() {
     this.messages = [];
-    // 重新生成会话ID
-    this.initSessionId();
+    this.initConversationId();
     try {
       await Taro.removeStorage({ key: MESSAGES_KEY });
     } catch (error) {

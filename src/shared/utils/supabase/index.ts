@@ -298,36 +298,44 @@ export async function uploadFileToStorage(
   }
 
   try {
-    // 1. 处理文件路径 - 微信临时文件可能是 http://tmp/ 开头，需要下载到本地
+    console.log('📤 开始上传头像，原始路径:', filePath)
+
+    // 1. 只有网络图片（https://）才需要先下载到本地
+    // wxfile:// 和 http://tmp/ 是本地临时文件，直接使用
     let localFilePath = filePath
 
-    if (filePath.startsWith('http://tmp/') || filePath.startsWith('https://')) {
-      // 下载临时文件到本地
-      const downloadResult = await Taro.downloadFile({
-        url: filePath,
-        timeout: 10000
-      })
+    if (filePath.startsWith('https://')) {
+      console.log('📥 检测到网络图片，下载到本地...')
 
-      console.log('📥 文件下载结果:', downloadResult)
+      try {
+        const downloadResult = await Taro.downloadFile({
+          url: filePath,
+          timeout: 15000
+        })
 
-      if (!downloadResult.tempFilePath) {
-        return { url: '', error: '下载文件失败' }
+        if (downloadResult.statusCode !== 200 || !downloadResult.tempFilePath) {
+          return { url: '', error: `文件下载失败: ${downloadResult.errMsg || '未知错误'}` }
+        }
+
+        localFilePath = downloadResult.tempFilePath
+      } catch (downloadErr: any) {
+        console.error('📥 下载异常:', downloadErr)
+        return { url: '', error: `文件下载异常: ${downloadErr.errMsg || downloadErr.message}` }
       }
-
-      localFilePath = downloadResult.tempFilePath
     }
 
-    // 2. 生成唯一文件名
+    console.log('📂 本地文件路径:', localFilePath)
+
+    // 2. 生成唯一文件名（统一使用 jpg 扩展名，避免扩展名识别问题）
     const timestamp = Date.now()
     const randomStr = Math.random().toString(36).substring(2, 8)
-    const ext = (filePath.split('.').pop() || 'jpeg').replace('jpg', 'jpeg')
-    const fileName = `${timestamp}-${randomStr}.${ext}`
+    const fileName = `${timestamp}-${randomStr}.jpg`
     const filePathStorage = `${folder}/${fileName}`
 
     // 3. 使用 Taro.uploadFile 上传到 Supabase Storage
     const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${filePathStorage}`
 
-    console.log('📤 开始上传到:', uploadUrl)
+    console.log('📤 上传到 Supabase:', uploadUrl)
 
     const uploadResult = await Taro.uploadFile({
       url: uploadUrl,
@@ -335,18 +343,24 @@ export async function uploadFileToStorage(
       name: 'file',
       header: {
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': `image/${ext}`,
+        'Content-Type': 'image/jpeg',
         'x-upsert': 'true'
       },
       timeout: 30000
     })
 
-    console.log('📤 上传结果:', uploadResult)
+    console.log('📤 上传结果:', {
+      statusCode: uploadResult.statusCode,
+      data: uploadResult.data,
+      errMsg: uploadResult.errMsg
+    })
 
     if (uploadResult.statusCode && uploadResult.statusCode >= 400) {
-      console.error('上传失败:', uploadResult.data)
-      const errorData = typeof uploadResult.data === 'string' ? JSON.parse(uploadResult.data) : uploadResult.data
-      return { url: '', error: errorData?.message || '上传失败' }
+      console.error('❌ 上传失败，状态码:', uploadResult.statusCode)
+      const errorData = typeof uploadResult.data === 'string'
+        ? (() => { try { return JSON.parse(uploadResult.data) } catch { return { message: uploadResult.data } } })()
+        : uploadResult.data
+      return { url: '', error: errorData?.message || errorData?.error || `上传失败 (${uploadResult.statusCode})` }
     }
 
     // 4. 返回公共访问 URL
@@ -356,8 +370,8 @@ export async function uploadFileToStorage(
     return { url: publicUrl, error: null }
 
   } catch (err: any) {
-    console.error('上传文件异常:', err)
-    return { url: '', error: err.message || '上传失败' }
+    console.error('❌ 上传文件异常:', err)
+    return { url: '', error: err.errMsg || err.message || '上传失败' }
   }
 }
 
